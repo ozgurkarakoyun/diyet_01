@@ -14,9 +14,7 @@
         background: rgba(0,0,0,0.5);
         padding: 1rem;
     }
-    #formPanel.open {
-        display: block;
-    }
+    #formPanel.open { display: block; }
     #formInner {
         background: #fff;
         border-radius: 12px;
@@ -25,19 +23,68 @@
     }
 }
 @media (min-width: 992px) {
-    #formPanel  { display: block !important; }
+    #formPanel     { display: block !important; }
     #mobileFormBtn { display: none; }
     #formCloseBtn  { display: none; }
 }
+
+/* Rehber modal */
+.guide-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+.guide-modal-overlay.open {
+    display: flex;
+}
+.guide-modal-inner {
+    position: relative;
+    max-width: 700px;
+    width: 100%;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+}
+.guide-modal-inner img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.guide-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    border: none;
+    color: #fff;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.guide-close-btn:hover { background: rgba(0,0,0,0.9); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Mobil: Ölçüm Ekle butonu -->
-<div class="d-lg-none mb-3">
-    <button class="btn btn-primary w-100 py-2" id="mobileFormBtn" onclick="openForm()">
+<!-- Mobil butonlar -->
+<div class="d-lg-none mb-3 d-flex gap-2">
+    <button class="btn btn-primary flex-grow-1 py-2" id="mobileFormBtn" onclick="openForm()">
         <i class="bi bi-plus-circle me-2"></i>Yeni Ölçüm Ekle
+    </button>
+    <button class="btn btn-outline-success py-2" onclick="openGuide()" title="Nasıl ölçülür?">
+        <i class="bi bi-camera me-1"></i> Rehber
     </button>
 </div>
 
@@ -50,10 +97,18 @@
                 <h6 class="mb-0 fw-bold">
                     <i class="bi bi-plus-circle me-2 text-success"></i>Yeni Ölçüm Ekle
                 </h6>
-                <button class="btn btn-sm btn-outline-secondary" id="formCloseBtn"
-                        onclick="closeForm()" title="Kapat">
-                    <i class="bi bi-x-lg"></i>
-                </button>
+                <div class="d-flex gap-1">
+                    <!-- Masaüstü rehber butonu -->
+                    <button class="btn btn-sm btn-outline-success d-none d-lg-inline-flex align-items-center gap-1"
+                            onclick="openGuide()" title="Nasıl ölçülür?">
+                        <i class="bi bi-camera"></i>
+                        <span style="font-size:0.75rem;">Rehber</span>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="formCloseBtn"
+                            onclick="closeForm()" title="Kapat">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <form method="POST" novalidate>
@@ -66,15 +121,15 @@
                     <p class="small text-muted fw-semibold mb-2">Vücut Ölçümleri (cm)</p>
 
                     {% set fields = [
-                        (form.boyun, 'Boyun Çevresi'),
+                        (form.boyun,     'Boyun Çevresi'),
                         (form.ust_gogus, 'Üst Göğüs'),
-                        (form.gogus, 'Göğüs'),
+                        (form.gogus,     'Göğüs'),
                         (form.alt_gogus, 'Alt Göğüs'),
-                        (form.gobek, 'Göbek'),
-                        (form.bel, 'Bel'),
-                        (form.kalca, 'Kalça'),
-                        (form.sag_kol, 'Sağ Kol'),
-                        (form.sol_kol, 'Sol Kol'),
+                        (form.gobek,     'Göbek'),
+                        (form.bel,       'Bel'),
+                        (form.kalca,     'Kalça'),
+                        (form.sag_kol,   'Sağ Kol'),
+                        (form.sol_kol,   'Sol Kol'),
                         (form.sag_bacak, 'Sağ Bacak'),
                         (form.sol_bacak, 'Sol Bacak'),
                     ] %}
@@ -136,8 +191,11 @@
         {% endif %}
 
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex align-items-center justify-content-between">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>Ölçüm Geçmişi</h6>
+                <button class="btn btn-sm btn-outline-success" onclick="openGuide()">
+                    <i class="bi bi-camera me-1"></i>Nasıl Ölçülür?
+                </button>
             </div>
             <div class="card-body p-0">
                 {% if measurements %}
@@ -178,10 +236,28 @@
         </div>
     </div>
 </div>
+
+<!-- Ölçüm Rehberi Modal -->
+<div class="guide-modal-overlay" id="guideModal" onclick="handleGuideClick(event)">
+    <div class="guide-modal-inner">
+        <button class="guide-close-btn" onclick="closeGuide()" title="Kapat">
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="p-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-camera text-success fs-5"></i>
+            <h6 class="mb-0 fw-bold">Ölçüm Rehberi – Nasıl Ölçülür?</h6>
+        </div>
+        <img src="{{ url_for('static', filename='img/olcum_rehberi.jpg') }}"
+             alt="Ölçüm Rehberi"
+             onerror="this.parentElement.innerHTML='<div class=\'p-4 text-center text-muted\'><div style=\'font-size:3rem;\'>🖼️</div><p class=\'mt-2\'>Resim henüz yüklenmedi.<br><small>app/static/img/olcum_rehberi.jpg</small></p></div>'">
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+/* Form aç/kapat */
 function openForm() {
     document.getElementById('formPanel').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -190,9 +266,25 @@ function closeForm() {
     document.getElementById('formPanel').classList.remove('open');
     document.body.style.overflow = '';
 }
-// Karanlık overlay'e tıklayınca kapat
 document.getElementById('formPanel').addEventListener('click', function(e) {
     if (e.target === this) closeForm();
+});
+
+/* Rehber modal aç/kapat */
+function openGuide() {
+    document.getElementById('guideModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeGuide() {
+    document.getElementById('guideModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function handleGuideClick(e) {
+    if (e.target === document.getElementById('guideModal')) closeGuide();
+}
+/* ESC ile kapat */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeForm(); closeGuide(); }
 });
 </script>
 
