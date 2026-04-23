@@ -175,24 +175,6 @@ DAVRANMA KURALLARI (KESİNLİKLE UYULMALI):
 
 
 
-@ai_bp.route('/test')
-@login_required
-def test_api():
-    """Geçici test route"""
-    from flask import jsonify
-    import urllib.error
-
-    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
-    result = {
-        'key_exists': bool(api_key),
-        'key_length': len(api_key),
-        'key_prefix': api_key[:12] + '...' if len(api_key) > 12 else 'BOŞ',
-    }
-
-    if not api_key:
-        result['test'] = 'HATA: ANTHROPIC_API_KEY bulunamadı'
-        return jsonify(result)
-
     try:
         req = urllib.request.Request(
             'https://api.anthropic.com/v1/messages',
@@ -269,7 +251,7 @@ def chat_send():
     def generate():
         try:
             payload = json.dumps({
-                'model': 'claude-sonnet-4-6',
+                'model': 'claude-haiku-4-5-20251001',
                 'max_tokens': 600,
                 'system': system_prompt,
                 'messages': messages,
