@@ -220,7 +220,7 @@ def chat_send():
     def generate():
         try:
             payload = json.dumps({
-                'model': 'claude-sonnet-4-20250514',
+                'model': 'claude-sonnet-4-6',
                 'max_tokens': 600,
                 'system': system_prompt,
                 'messages': messages,
