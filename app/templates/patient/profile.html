@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Profilim – DiyetTakip{% endblock %}
+{% block page_title %}Profilim{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-person-circle me-2"></i>Profil Bilgileri</h6></div>
+      <div class="card-body">
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.nickname.label(class="form-label fw-semibold") }}
+            {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else "")) }}
+            {% for e in form.nickname.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.phone.label(class="form-label fw-semibold") }}
+            {{ form.phone(class="form-control", placeholder="555 123 4567") }}
+          </div>
+          <div class="mb-3">
+            {{ form.gender.label(class="form-label fw-semibold") }}
+            {{ form.gender(class="form-select") }}
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col">
+              {{ form.height_cm.label(class="form-label fw-semibold") }}
+              {{ form.height_cm(class="form-control", placeholder="170") }}
+            </div>
+            <div class="col">
+              {{ form.start_weight.label(class="form-label fw-semibold") }}
+              {{ form.start_weight(class="form-control", placeholder="70") }}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-2"></i>Güncelle</button>
+        </form>
+        <hr>
+        <div class="text-muted small">
+          <p class="mb-1"><i class="bi bi-envelope me-2"></i>{{ patient.user.email }}</p>
+          <p class="mb-0"><i class="bi bi-calendar3 me-2"></i>Kayıt: {{ patient.created_at.strftime('%d.%m.%Y') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

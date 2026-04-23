@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Takviyelerim – DiyetTakip{% endblock %}
+{% block page_title %}Takviyeler & Ek Gıdalar{% endblock %}
+
+{% block content %}
+{% if active_supplements %}
+<h6 class="fw-bold mb-3 text-success"><i class="bi bi-check-circle me-2"></i>Aktif Takviyeler</h6>
+<div class="row g-3 mb-4">
+    {% for s in active_supplements %}
+    <div class="col-md-6">
+        <div class="card h-100 border-start border-success border-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h6 class="fw-bold mb-1">💊 {{ s.product_name }}</h6>
+                    <span class="badge bg-success">Aktif</span>
+                </div>
+                {% if s.description %}
+                <p class="text-muted small mb-2">{{ s.description }}</p>
+                {% endif %}
+                {% if s.usage_instructions %}
+                <div class="mb-1">
+                    <small class="text-muted"><i class="bi bi-info-circle me-1"></i><strong>Kullanım:</strong></small>
+                    <small> {{ s.usage_instructions }}</small>
+                </div>
+                {% endif %}
+                {% if s.usage_time %}
+                <div class="mb-1">
+                    <small class="text-success"><i class="bi bi-clock me-1"></i><strong>Zaman:</strong> {{ s.usage_time }}</small>
+                </div>
+                {% endif %}
+                {% if s.start_date or s.end_date %}
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="bi bi-calendar3 me-1"></i>
+                        {{ s.start_date.strftime('%d.%m.%Y') if s.start_date else '?' }}
+                        {% if s.end_date %} – {{ s.end_date.strftime('%d.%m.%Y') }}{% endif %}
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if inactive_supplements %}
+<h6 class="fw-bold mb-3 text-muted"><i class="bi bi-pause-circle me-2"></i>Pasif / Tamamlanan</h6>
+<div class="row g-3">
+    {% for s in inactive_supplements %}
+    <div class="col-md-6">
+        <div class="card h-100 opacity-65">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="fw-bold mb-1 text-muted">{{ s.product_name }}</h6>
+                    <span class="badge bg-secondary">Pasif</span>
+                </div>
+                {% if s.usage_instructions %}
+                <small class="text-muted">{{ s.usage_instructions }}</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not active_supplements and not inactive_supplements %}
+<div class="text-center py-5">
+    <div class="display-4 mb-3">💊</div>
+    <p class="text-muted">Henüz takviye tanımlanmamış.</p>
+    <small class="text-muted">Diyetisyeniniz size takviye / ek gıda tanımladığında burada görünecek.</small>
+</div>
+{% endif %}
+{% endblock %}

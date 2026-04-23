@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – DiyetTakip{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card green">
+            <p><i class="bi bi-people-fill me-1"></i>Toplam Hasta</p>
+            <h2>{{ patients|length }}</h2>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card teal">
+            <p><i class="bi bi-person-check me-1"></i>Aktif Hasta</p>
+            <h2>{{ active_count }}</h2>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card orange">
+            <p><i class="bi bi-chat-dots-fill me-1"></i>Okunmamış Mesaj</p>
+            <h2>{{ unread_count }}</h2>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card purple">
+            <p><i class="bi bi-calendar3 me-1"></i>Bugün</p>
+            <h2 style="font-size:1.2rem;padding-top:8px;">{{ now().strftime('%d %b') if now else '' }}</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Patients Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-people me-2 text-success"></i>Hastalarım</h6>
+        <div class="d-flex gap-2">
+            <input class="form-control form-control-sm" id="searchInput"
+                   placeholder="Hasta ara..." style="width:180px;">
+            <a href="{{ url_for('dietitian.registration_codes') }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Kayıt Kodu
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="patientsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hasta</th>
+                        <th class="d-none d-md-table-cell">E-posta</th>
+                        <th>Aktif Etap</th>
+                        <th class="d-none d-md-table-cell">Son Ölçüm</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td>
+                        <strong>{{ patient.nickname }}</strong>
+                        {% if patient.gender %}
+                        <small class="text-muted d-block">
+                            {{ '♀' if patient.gender == 'female' else '♂' }}
+                            {% if patient.height_cm %}{{ patient.height_cm|int }} cm{% endif %}
+                        </small>
+                        {% endif %}
+                    </td>
+                    <td class="d-none d-md-table-cell text-muted small">{{ patient.user.email }}</td>
+                    <td>
+                        {% if patient.current_stage %}
+                        <span class="stage-badge stage-{{ patient.current_stage.stage_number if not patient.current_stage.is_free_day else 'free' }}">
+                            {% if patient.current_stage.is_free_day %}
+                                🎉 Serbest Gün
+                            {% else %}
+                                {{ patient.current_stage.stage_number }}. Etap
+                            {% endif %}
+                        </span>
+                        {% if not patient.current_stage.is_free_day and patient.stage_start_date %}
+                        <small class="text-muted d-block">{{ patient.get_days_in_current_stage() }}. gün</small>
+                        {% endif %}
+                        {% else %}
+                        <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="d-none d-md-table-cell">
+                        {% set last_m = patient.get_last_measurement() %}
+                        {% if last_m %}
+                        <span class="small">{{ last_m.date.strftime('%d.%m.%Y') }}</span>
+                        {% else %}
+                        <span class="text-muted small">Yok</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if patient.is_active %}
+                        <span class="badge bg-success">Aktif</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Pasif</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1 flex-wrap">
+                            <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}"
+                               class="btn btn-sm btn-outline-primary" title="Detay">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('dietitian.patient_measurements', patient_id=patient.id) }}"
+                               class="btn btn-sm btn-outline-secondary" title="Ölçümler">
+                                <i class="bi bi-rulers"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div class="display-4 mb-3">👥</div>
+            <p class="text-muted">Henüz hasta yok.</p>
+            <a href="{{ url_for('dietitian.registration_codes') }}" class="btn btn-primary">
+                <i class="bi bi-key-fill me-2"></i>Kayıt Kodu Oluştur
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('searchInput').addEventListener('input', function() {
+    const val = this.value.toLowerCase();
+    document.querySelectorAll('#patientsTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(val) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

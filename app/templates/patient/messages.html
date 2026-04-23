@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Mesajlar – DiyetTakip{% endblock %}
+{% block page_title %}Diyetisyenimle Mesajlaşma{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card" style="height:calc(100vh - 160px); min-height:500px; display:flex; flex-direction:column;">
+            <div class="card-header d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold"
+                     style="width:38px;height:38px;font-size:0.9rem;">
+                    {{ patient.dietitian.name[0]|upper }}
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">{{ patient.dietitian.name }}</h6>
+                    <small class="text-muted">Diyetisyeniniz</small>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="flex-grow-1 overflow-auto p-3" id="msgArea" style="background:#f8f9fa;">
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="d-flex mb-3 {{ 'justify-content-end' if msg.sender_type == 'patient' else 'justify-content-start' }}
+                     msg-{{ msg.sender_type }}">
+                    <div style="max-width:75%;">
+                        <div class="msg-bubble px-3 py-2 shadow-sm">{{ msg.content }}</div>
+                        <div class="msg-time {{ 'text-end' if msg.sender_type == 'patient' else '' }} px-1">
+                            {{ msg.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            {% if msg.sender_type == 'patient' %}
+                            {% if msg.is_read %}
+                            <i class="bi bi-check2-all text-primary"></i>
+                            {% else %}
+                            <i class="bi bi-check2 text-muted"></i>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <div class="display-4 mb-2">💬</div>
+                    <p>Henüz mesaj yok.</p>
+                    <small>Diyetisyeninize mesaj göndererek başlayın.</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Send Form -->
+            <div class="card-footer bg-white p-3">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ form.content(class="form-control", placeholder="Mesajınızı yazın...",
+                            rows=1, style="resize:none;", id="msgInput") }}
+                        <button type="submit" class="btn btn-primary px-3">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                    {% for e in form.content.errors %}
+                    <div class="text-danger small mt-1">{{ e }}</div>
+                    {% endfor %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Scroll to bottom
+const area = document.getElementById('msgArea');
+if (area) area.scrollTop = area.scrollHeight;
+
+// Enter to send (Shift+Enter for newline)
+document.getElementById('msgInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.closest('form').submit();
+    }
+});
+</script>
+{% endblock %}

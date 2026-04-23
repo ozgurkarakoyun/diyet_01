@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% block title %}Panelim – DiyetTakip{% endblock %}
+{% block page_title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <!-- Current Stage Card -->
+    <div class="col-12">
+        {% if patient.current_stage %}
+        <div class="card border-0" style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%); color:#fff;">
+            <div class="card-body p-3 p-md-4">
+                <div class="row align-items-center">
+                    <div class="col-md-7">
+                        <p class="mb-1 opacity-75 small"><i class="bi bi-layers me-1"></i>AKTİF ETAP</p>
+                        {% if patient.current_stage.is_free_day %}
+                        <h3 class="fw-bold mb-1">🎉 Serbest Gün!</h3>
+                        <p class="mb-0 opacity-85">Bugün serbest gününüz. Yarın 1. Etap başlıyor.</p>
+                        {% else %}
+                        <h3 class="fw-bold mb-1">{{ patient.current_stage.stage_number }}. Etap – {{ patient.current_stage.name }}</h3>
+                        <p class="mb-0 opacity-85">{{ patient.current_stage.duration_days }} günlük etap</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-5 text-md-end mt-2 mt-md-0">
+                        {% if not patient.current_stage.is_free_day %}
+                        <div class="d-inline-block text-center">
+                            <div style="font-size:2.5rem; font-weight:700;">{{ days_in_stage }}</div>
+                            <small class="opacity-75">. gün</small>
+                            {% if days_remaining > 0 %}
+                            <div class="mt-1">
+                                <small class="opacity-75">{{ days_remaining }} gün kaldı</small>
+                                <div class="progress mt-1" style="height:6px; background:rgba(255,255,255,0.2);">
+                                    <div class="progress-bar bg-white"
+                                         style="width:{{ [(days_in_stage / patient.current_stage.duration_days * 100)|int, 100]|min }}%"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <div class="mt-2">
+                            <span class="badge bg-white text-success fw-bold">Döngü {{ patient.cycle_number }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Quick Stats -->
+    <div class="col-6 col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-3">
+                <div style="font-size:1.8rem;">📏</div>
+                <h6 class="fw-bold mt-1 mb-0">
+                    {% if last_measurement %}{{ last_measurement.total_cm()|int }} cm{% else %}—{% endif %}
+                </h6>
+                <small class="text-muted">Toplam ölçüm</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-3">
+                <div style="font-size:1.8rem;">⚖️</div>
+                <h6 class="fw-bold mt-1 mb-0">
+                    {% if last_measurement and last_measurement.weight %}{{ last_measurement.weight }} kg{% else %}—{% endif %}
+                </h6>
+                <small class="text-muted">Son kilo</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-3">
+                <a href="{{ url_for('patient.messages') }}" class="text-decoration-none text-dark">
+                    <div style="font-size:1.8rem;">💬</div>
+                    <h6 class="fw-bold mt-1 mb-0">
+                        {% if unread_count > 0 %}
+                        <span class="badge bg-danger">{{ unread_count }}</span>
+                        {% else %}0{% endif %}
+                    </h6>
+                    <small class="text-muted">Yeni mesaj</small>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-3">
+                <div style="font-size:1.8rem;">💊</div>
+                <h6 class="fw-bold mt-1 mb-0">{{ active_supplements|length }}</h6>
+                <small class="text-muted">Aktif takviye</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Description -->
+    {% if patient.current_stage and patient.current_stage.description %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-journal-text me-2 text-success"></i>
+                    {% if patient.current_stage.is_free_day %}Serbest Gün{% else %}{{ patient.current_stage.stage_number }}. Etap{% endif %} – Ne Yiyebilirsiniz?
+                </h6>
+            </div>
+            <div class="card-body">
+                <div style="white-space: pre-line; font-size:0.9rem; line-height:1.7;">{{ patient.current_stage.description }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active Supplements -->
+    {% if active_supplements %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-capsule-pill me-2 text-success"></i>Aktif Takviyeler</h6>
+                <a href="{{ url_for('patient.supplements') }}" class="btn btn-sm btn-outline-secondary">Tümü</a>
+            </div>
+            <div class="card-body">
+                {% for s in active_supplements %}
+                <div class="d-flex align-items-start mb-2 pb-2 {{ 'border-bottom' if not loop.last }}">
+                    <div class="me-2 mt-1">💊</div>
+                    <div>
+                        <strong class="small">{{ s.product_name }}</strong>
+                        {% if s.usage_time %}
+                        <br><small class="text-success"><i class="bi bi-clock me-1"></i>{{ s.usage_time }}</small>
+                        {% endif %}
+                        {% if s.usage_instructions %}
+                        <br><small class="text-muted">{{ s.usage_instructions }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Last Measurement -->
+    {% if last_measurement %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-rulers me-2 text-success"></i>Son Ölçüm</h6>
+                <span class="text-muted small">{{ last_measurement.date.strftime('%d.%m.%Y') }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row row-cols-2 g-2">
+                    {% set fields = [
+                        ('Boyun', last_measurement.boyun),
+                        ('Üst Göğüs', last_measurement.ust_gogus),
+                        ('Göğüs', last_measurement.gogus),
+                        ('Alt Göğüs', last_measurement.alt_gogus),
+                        ('Göbek', last_measurement.gobek),
+                        ('Bel', last_measurement.bel),
+                        ('Kalça', last_measurement.kalca),
+                        ('Sağ Kol', last_measurement.sag_kol),
+                        ('Sol Kol', last_measurement.sol_kol),
+                        ('Sağ Bacak', last_measurement.sag_bacak),
+                        ('Sol Bacak', last_measurement.sol_bacak),
+                    ] %}
+                    {% for label, val in fields %}
+                    {% if val %}
+                    <div class="col">
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">{{ label }}</small>
+                            <strong class="small">{{ val }} cm</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="mt-3 text-center">
+                    <a href="{{ url_for('patient.measurements') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-lg me-1"></i>Yeni Ölçüm Ekle
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-md-6">
+        <div class="card h-100 border-dashed">
+            <div class="card-body text-center py-5">
+                <div class="display-5 mb-2">📏</div>
+                <p class="text-muted">Henüz ölçüm eklemediniz.</p>
+                <a href="{{ url_for('patient.measurements') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>İlk Ölçümü Ekle
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Links -->
+    <div class="col-12">
+        <div class="row g-2">
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('patient.measurements') }}" class="btn btn-outline-primary w-100 py-3">
+                    <i class="bi bi-rulers d-block fs-4 mb-1"></i>
+                    <small>Ölçüm Ekle</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('patient.messages') }}" class="btn btn-outline-success w-100 py-3 position-relative">
+                    <i class="bi bi-chat-dots d-block fs-4 mb-1"></i>
+                    <small>Mesajlar</small>
+                    {% if unread_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('patient.supplements') }}" class="btn btn-outline-warning w-100 py-3">
+                    <i class="bi bi-capsule-pill d-block fs-4 mb-1"></i>
+                    <small>Takviyeler</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="{{ url_for('patient.diet_rules') }}" class="btn btn-outline-info w-100 py-3">
+                    <i class="bi bi-journal-text d-block fs-4 mb-1"></i>
+                    <small>Diyet Kuralları</small>
+                </a>
+            </div>
+            <div class="col-12 col-md-6">
+                <a href="{{ url_for('ai.chat') }}" class="btn btn-success w-100 py-3"
+                   style="background:linear-gradient(135deg,var(--primary-dark),var(--primary-light));">
+                    <i class="bi bi-robot d-block fs-4 mb-1"></i>
+                    <small>🤖 Diyet Asistanı – Soru Sor</small>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

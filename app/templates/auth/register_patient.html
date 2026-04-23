@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Hasta Kaydı – DiyetTakip{% endblock %}
+
+{% block auth_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-4"
+     style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%);">
+    <div class="container" style="max-width:460px;">
+        <div class="text-center mb-4">
+            <div class="display-4 mb-2">👤</div>
+            <h2 class="text-white fw-bold">Hasta Kaydı</h2>
+            <p class="text-white-50">Diyetisyeninizden aldığınız kodla kayıt olun</p>
+        </div>
+        <div class="card">
+            <div class="card-body p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} py-2 alert-dismissible fade show">
+                    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endwith %}
+
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.nickname.label(class="form-label fw-semibold") }}
+                        {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else ""),
+                            placeholder="Adınız veya rumuzunuz") }}
+                        {% for e in form.nickname.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label fw-semibold") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                            placeholder="ornek@mail.com") }}
+                        {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                            placeholder="En az 6 karakter") }}
+                        {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password2.label(class="form-label fw-semibold") }}
+                        {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else ""),
+                            placeholder="Şifrenizi tekrar giriniz") }}
+                        {% for e in form.password2.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    <div class="mb-4">
+                        {{ form.registration_code.label(class="form-label fw-semibold") }}
+                        {{ form.registration_code(class="form-control" + (" is-invalid" if form.registration_code.errors else ""),
+                            placeholder="Diyetisyeninizden aldığınız kod", style="text-transform:uppercase;") }}
+                        {% for e in form.registration_code.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        <div class="form-text">Bu kodu diyetisyeninizden alacaksınız.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-person-check me-2"></i>Kayıt Ol
+                    </button>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('auth.login') }}" class="text-muted small">
+                        <i class="bi bi-arrow-left me-1"></i>Giriş sayfasına dön
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.nickname }} – Ölçümler{% endblock %}
+{% block page_title %}Ölçüm Geçmişi{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0 fw-bold">{{ patient.nickname }} – Ölçüm Geçmişi</h5>
+</div>
+
+{% if measurements|length >= 2 %}
+<!-- Charts -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-bold">Temel Ölçümler (cm)</h6></div>
+            <div class="card-body"><canvas id="mainChart" height="200"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-bold">Toplam Santimetre</h6></div>
+            <div class="card-body"><canvas id="totalChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Measurements Table -->
+<div class="card">
+    <div class="card-header"><h6 class="mb-0 fw-bold">Tüm Ölçümler</h6></div>
+    <div class="card-body p-0">
+        {% if measurements %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tarih</th><th>Boyun</th><th>Üst G.</th><th>Göğüs</th><th>Alt G.</th>
+                        <th>Göbek</th><th>Bel</th><th>Kalça</th><th>S.Kol</th><th>S.Bacak</th><th>Kilo</th><th>Toplam</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for m in measurements|reverse %}
+                <tr>
+                    <td class="fw-semibold small">{{ m.date.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ m.boyun or '—' }}</td>
+                    <td>{{ m.ust_gogus or '—' }}</td>
+                    <td>{{ m.gogus or '—' }}</td>
+                    <td>{{ m.alt_gogus or '—' }}</td>
+                    <td>{{ m.gobek or '—' }}</td>
+                    <td>{{ m.bel or '—' }}</td>
+                    <td>{{ m.kalca or '—' }}</td>
+                    <td>{{ m.sag_kol or '—' }}</td>
+                    <td>{{ m.sag_bacak or '—' }}</td>
+                    <td>{{ m.weight or '—' }}</td>
+                    <td class="fw-bold text-success">{{ '%.1f'|format(m.total_cm()) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center text-muted py-4">Henüz ölçüm yok.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if measurements|length >= 2 %}
+<script>
+const labels = {{ measurements | map(attribute='date') | map('strftime', '%d.%m.%Y') | list | tojson }};
+const gobek  = {{ measurements | map(attribute='gobek')  | list | tojson }};
+const bel    = {{ measurements | map(attribute='bel')    | list | tojson }};
+const kalca  = {{ measurements | map(attribute='kalca')  | list | tojson }};
+const boyun  = {{ measurements | map(attribute='boyun')  | list | tojson }};
+const totals = {{ measurements | map(attribute='total_cm') | map('call') | list | tojson }};
+
+const cfg = { responsive: true, plugins: { legend: { position: 'bottom' } } };
+
+new Chart(document.getElementById('mainChart'), {
+    type: 'line',
+    data: {
+        labels,
+        datasets: [
+            { label: 'Göbek', data: gobek, borderColor: '#e76f51', tension: 0.3, fill: false },
+            { label: 'Bel',   data: bel,   borderColor: '#2d6a4f', tension: 0.3, fill: false },
+            { label: 'Kalça', data: kalca, borderColor: '#0096c7', tension: 0.3, fill: false },
+            { label: 'Boyun', data: boyun, borderColor: '#6c5ce7', tension: 0.3, fill: false },
+        ]
+    },
+    options: cfg
+});
+
+new Chart(document.getElementById('totalChart'), {
+    type: 'bar',
+    data: {
+        labels,
+        datasets: [{ label: 'Toplam cm', data: totals, backgroundColor: '#40916c88', borderColor: '#40916c', borderWidth: 2 }]
+    },
+    options: { ...cfg, plugins: { legend: { display: false } } }
+});
+</script>
+{% endif %}
+{% endblock %}

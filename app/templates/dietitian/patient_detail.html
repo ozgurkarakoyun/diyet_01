@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.nickname }} – DiyetTakip{% endblock %}
+{% block page_title %}Hasta Detayı{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-2 flex-wrap">
+    <a href="{{ url_for('dietitian.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0 fw-bold">{{ patient.nickname }}</h5>
+    <span class="badge bg-{{ 'success' if patient.is_active else 'secondary' }}">
+        {{ 'Aktif' if patient.is_active else 'Pasif' }}
+    </span>
+    <div class="ms-auto">
+        <form method="POST" action="{{ url_for('dietitian.toggle_patient_active', patient_id=patient.id) }}" class="d-inline">
+            {{ stage_form.hidden_tag() }}
+            <button class="btn btn-sm btn-outline-{{ 'danger' if patient.is_active else 'success' }}">
+                {{ 'Pasif Yap' if patient.is_active else 'Aktif Yap' }}
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Left Column -->
+    <div class="col-lg-4">
+        <!-- Patient Info -->
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-person me-2"></i>Hasta Bilgileri</h6></div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><td class="text-muted">E-posta</td><td>{{ patient.user.email }}</td></tr>
+                    <tr><td class="text-muted">Telefon</td><td>{{ patient.phone or '—' }}</td></tr>
+                    <tr><td class="text-muted">Cinsiyet</td>
+                        <td>{{ 'Kadın' if patient.gender == 'female' else ('Erkek' if patient.gender == 'male' else '—') }}</td>
+                    </tr>
+                    <tr><td class="text-muted">Boy</td><td>{{ (patient.height_cm|string + ' cm') if patient.height_cm else '—' }}</td></tr>
+                    <tr><td class="text-muted">Başlangıç Kilosu</td><td>{{ (patient.start_weight|string + ' kg') if patient.start_weight else '—' }}</td></tr>
+                    <tr><td class="text-muted">Başlangıç Tarihi</td><td>{{ patient.created_at.strftime('%d.%m.%Y') }}</td></tr>
+                    <tr><td class="text-muted">Döngü No</td><td>{{ patient.cycle_number }}. Döngü</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Current Stage -->
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-layers me-2"></i>Aktif Etap</h6></div>
+            <div class="card-body">
+                {% if patient.current_stage %}
+                <div class="text-center py-2">
+                    <span class="stage-badge stage-{{ patient.current_stage.stage_number if not patient.current_stage.is_free_day else 'free' }} fs-6 px-3 py-2">
+                        {% if patient.current_stage.is_free_day %}🎉 Serbest Gün
+                        {% else %}{{ patient.current_stage.stage_number }}. Etap – {{ patient.current_stage.name }}
+                        {% endif %}
+                    </span>
+                    <p class="text-muted mt-2 mb-0 small">
+                        {{ patient.get_days_in_current_stage() }}. gün
+                        {% if patient.stage_start_date %}
+                        ({{ patient.stage_start_date.strftime('%d.%m.%Y') }}'den beri)
+                        {% endif %}
+                    </p>
+                </div>
+                {% else %}
+                <p class="text-muted text-center my-2">Etap atanmamış</p>
+                {% endif %}
+
+                <!-- Stage Change Form -->
+                <hr>
+                <form method="POST" action="{{ url_for('dietitian.change_stage', patient_id=patient.id) }}">
+                    {{ stage_form.hidden_tag() }}
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Etap Değiştir</label>
+                        {{ stage_form.stage_id(class="form-select form-select-sm") }}
+                    </div>
+                    <div class="mb-2">
+                        {{ stage_form.notes(class="form-control form-control-sm", placeholder="Not (opsiyonel)", rows=2) }}
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-arrow-repeat me-1"></i>Etabı Güncelle
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Last Measurements Summary -->
+        {% if measurements %}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-rulers me-2"></i>Son Ölçüm</h6>
+                <a href="{{ url_for('dietitian.patient_measurements', patient_id=patient.id) }}"
+                   class="btn btn-xs btn-outline-secondary btn-sm">Tümü</a>
+            </div>
+            <div class="card-body">
+                {% set m = measurements[0] %}
+                <p class="text-muted small mb-2">{{ m.date.strftime('%d.%m.%Y') }}</p>
+                <div class="row row-cols-2 g-1">
+                    {% if m.boyun %}<div class="col"><small class="text-muted">Boyun:</small><br><strong>{{ m.boyun }} cm</strong></div>{% endif %}
+                    {% if m.gobek %}<div class="col"><small class="text-muted">Göbek:</small><br><strong>{{ m.gobek }} cm</strong></div>{% endif %}
+                    {% if m.bel %}<div class="col"><small class="text-muted">Bel:</small><br><strong>{{ m.bel }} cm</strong></div>{% endif %}
+                    {% if m.kalca %}<div class="col"><small class="text-muted">Kalça:</small><br><strong>{{ m.kalca }} cm</strong></div>{% endif %}
+                    {% if m.weight %}<div class="col"><small class="text-muted">Kilo:</small><br><strong>{{ m.weight }} kg</strong></div>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-8">
+        <!-- Messages -->
+        <div class="card mb-3">
+            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-chat-dots me-2"></i>Mesajlar</h6></div>
+            <div class="messages-container" id="msgContainer">
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="d-flex mb-3 {{ 'justify-content-end' if msg.sender_type == 'dietitian' else 'justify-content-start' }}
+                    msg-{{ msg.sender_type }}">
+                    <div>
+                        <div class="msg-bubble px-3 py-2">{{ msg.content }}</div>
+                        <div class="msg-time {{ 'text-end' if msg.sender_type == 'dietitian' else '' }}">
+                            {{ msg.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            {% if msg.sender_type == 'dietitian' %}
+                            {% if msg.is_read %}<i class="bi bi-check2-all text-info"></i>
+                            {% else %}<i class="bi bi-check2"></i>{% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-center text-muted py-4">Henüz mesaj yok.</p>
+                {% endif %}
+            </div>
+            <div class="card-body pt-0 border-top">
+                <form method="POST" action="{{ url_for('dietitian.send_message', patient_id=patient.id) }}">
+                    {{ message_form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ message_form.content(class="form-control", placeholder="Mesajınızı yazın...", rows=2) }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Supplements -->
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-capsule-pill me-2"></i>Takviyeler / Ek Gıdalar</h6>
+                <a href="{{ url_for('dietitian.manage_supplements', patient_id=patient.id) }}"
+                   class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Ekle
+                </a>
+            </div>
+            <div class="card-body">
+                {% if supplements %}
+                {% for s in supplements[:5] %}
+                <div class="d-flex align-items-start mb-2 p-2 rounded {{ 'bg-light' if not s.is_active else '' }}">
+                    <div class="flex-grow-1">
+                        <strong class="small">{{ s.product_name }}</strong>
+                        {% if not s.is_active %}<span class="badge bg-secondary ms-1">Pasif</span>{% endif %}
+                        {% if s.usage_time %}<br><small class="text-muted"><i class="bi bi-clock me-1"></i>{{ s.usage_time }}</small>{% endif %}
+                        {% if s.usage_instructions %}<br><small class="text-muted">{{ s.usage_instructions[:80] }}{% if s.usage_instructions|length > 80 %}...{% endif %}</small>{% endif %}
+                    </div>
+                    <div class="d-flex gap-1 ms-2">
+                        <form method="POST" action="{{ url_for('dietitian.toggle_supplement', supplement_id=s.id) }}">
+                            {{ message_form.hidden_tag() }}
+                            <button class="btn btn-xs btn-sm btn-outline-{{ 'warning' if s.is_active else 'success' }}"
+                                    title="{{ 'Pasif Yap' if s.is_active else 'Aktif Yap' }}">
+                                <i class="bi bi-{{ 'pause' if s.is_active else 'play' }}"></i>
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('dietitian.delete_supplement', supplement_id=s.id) }}">
+                            {{ message_form.hidden_tag() }}
+                            <button class="btn btn-sm btn-outline-danger" title="Sil"
+                                    onclick="return confirm('Silmek istediğinize emin misiniz?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if supplements|length > 5 %}
+                <a href="{{ url_for('dietitian.manage_supplements', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary w-100">
+                    Tümünü Gör ({{ supplements|length }})
+                </a>
+                {% endif %}
+                {% else %}
+                <p class="text-muted text-center my-3">Henüz takviye eklenmemiş.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Stage History -->
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Etap Geçmişi</h6></div>
+            <div class="card-body p-0">
+                {% if stage_history %}
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr><th>Etap</th><th>Başlangıç</th><th>Bitiş</th><th>Döngü</th><th>Değiştiren</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for h in stage_history %}
+                        <tr>
+                            <td><span class="stage-badge stage-{{ h.stage.stage_number if not h.stage.is_free_day else 'free' }}">
+                                {% if h.stage.is_free_day %}Serbest{% else %}{{ h.stage.stage_number }}. Etap{% endif %}
+                            </span></td>
+                            <td class="small">{{ h.start_date.strftime('%d.%m.%Y') }}</td>
+                            <td class="small">{{ h.end_date.strftime('%d.%m.%Y') if h.end_date else '—' }}</td>
+                            <td class="small">{{ h.cycle_number }}</td>
+                            <td><span class="badge bg-{{ 'info' if h.changed_by == 'auto' else 'warning' }} text-dark">
+                                {{ 'Otomatik' if h.changed_by == 'auto' else 'Diyetisyen' }}
+                            </span></td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">Etap geçmişi yok.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const mc = document.getElementById('msgContainer');
+if (mc) mc.scrollTop = mc.scrollHeight;
+</script>
+{% endblock %}

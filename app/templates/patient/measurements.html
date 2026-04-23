@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Ölçümlerim – DiyetTakip{% endblock %}
+{% block page_title %}Ölçümlerim{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <!-- Add Measurement Form -->
+    <div class="col-lg-4">
+        <div class="card sticky-top" style="top:80px;">
+            <div class="card-header">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-success"></i>Yeni Ölçüm Ekle</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.date.label(class="form-label fw-semibold small") }}
+                        {{ form.date(class="form-control form-control-sm") }}
+                    </div>
+                    <hr class="my-2">
+                    <p class="small text-muted fw-semibold mb-2">Vücut Ölçümleri (cm)</p>
+
+                    {% set fields = [
+                        (form.boyun, 'Boyun Çevresi'),
+                        (form.ust_gogus, 'Üst Göğüs'),
+                        (form.gogus, 'Göğüs'),
+                        (form.alt_gogus, 'Alt Göğüs'),
+                        (form.gobek, 'Göbek'),
+                        (form.bel, 'Bel'),
+                        (form.kalca, 'Kalça'),
+                        (form.sag_kol, 'Sağ Kol'),
+                        (form.sol_kol, 'Sol Kol'),
+                        (form.sag_bacak, 'Sağ Bacak'),
+                        (form.sol_bacak, 'Sol Bacak'),
+                    ] %}
+
+                    <div class="row g-2">
+                    {% for field, label in fields %}
+                    <div class="col-6">
+                        <label class="form-label small mb-1">{{ label }}</label>
+                        {{ field(class="form-control form-control-sm" + (" is-invalid" if field.errors else ""),
+                            placeholder="cm") }}
+                        {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                    </div>
+                    {% endfor %}
+                    </div>
+
+                    <hr class="my-2">
+                    <div class="mb-3">
+                        {{ form.weight.label(class="form-label fw-semibold small") }}
+                        {{ form.weight(class="form-control form-control-sm", placeholder="kg") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label fw-semibold small") }}
+                        {{ form.notes(class="form-control form-control-sm", rows=2, placeholder="Notlarınız...") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-save me-2"></i>Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- History & Charts -->
+    <div class="col-lg-8">
+        {% if measurements|length >= 2 %}
+        <!-- Charts -->
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-graph-down-arrow me-2 text-success"></i>Değişim Grafiği</h6>
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active" onclick="showChart('main')">Ölçümler</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="showChart('total')">Toplam</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="showChart('weight')">Kilo</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="mainChart" height="180"></canvas>
+                <canvas id="totalChart" height="180" style="display:none;"></canvas>
+                <canvas id="weightChart" height="180" style="display:none;"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Measurements Table -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>Ölçüm Geçmişi</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if measurements %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Göbek</th>
+                                <th>Bel</th>
+                                <th>Kalça</th>
+                                <th>Boyun</th>
+                                <th>Kilo</th>
+                                <th>Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% set prev = namespace(total=None) %}
+                        {% for m in measurements %}
+                        {% set curr_total = m.total_cm() %}
+                        <tr>
+                            <td class="fw-semibold small">{{ m.date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ m.gobek or '—' }}</td>
+                            <td>{{ m.bel or '—' }}</td>
+                            <td>{{ m.kalca or '—' }}</td>
+                            <td>{{ m.boyun or '—' }}</td>
+                            <td>{{ m.weight or '—' }}</td>
+                            <td>
+                                <strong>{{ '%.1f'|format(curr_total) }}</strong>
+                                {% if prev.total is not none %}
+                                {% set diff = curr_total - prev.total %}
+                                {% if diff < 0 %}
+                                <small class="text-success">▼{{ '%.1f'|format(diff|abs) }}</small>
+                                {% elif diff > 0 %}
+                                <small class="text-danger">▲{{ '%.1f'|format(diff) }}</small>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% set prev.total = curr_total %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="display-4 mb-2">📏</div>
+                    <p class="text-muted">Henüz ölçüm eklenmemiş.</p>
+                    <p class="text-muted small">Soldaki formu kullanarak ilk ölçümünüzü ekleyin.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if measurements|length >= 2 %}
+<script>
+fetch('{{ url_for("patient.measurements_data") }}')
+.then(r => r.json())
+.then(data => {
+    const opts = { responsive: true, plugins: { legend: { position: 'bottom' } },
+                   scales: { y: { beginAtZero: false } } };
+
+    window.charts = {};
+
+    charts.main = new Chart(document.getElementById('mainChart'), {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [
+                { label: 'Göbek', data: data.gobek, borderColor: '#e76f51', tension: 0.3, fill: false },
+                { label: 'Bel',   data: data.bel,   borderColor: '#2d6a4f', tension: 0.3, fill: false },
+                { label: 'Kalça', data: data.kalca, borderColor: '#0096c7', tension: 0.3, fill: false },
+            ]
+        },
+        options: opts
+    });
+
+    charts.total = new Chart(document.getElementById('totalChart'), {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{ label: 'Toplam cm', data: data.total, borderColor: '#2d6a4f',
+                         backgroundColor: 'rgba(45,106,79,0.1)', fill: true, tension: 0.3 }]
+        },
+        options: { ...opts, plugins: { legend: { display: false } } }
+    });
+
+    charts.weight = new Chart(document.getElementById('weightChart'), {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{ label: 'Kilo (kg)', data: data.weight, borderColor: '#6c5ce7',
+                         backgroundColor: 'rgba(108,92,231,0.1)', fill: true, tension: 0.3 }]
+        },
+        options: { ...opts, plugins: { legend: { display: false } } }
+    });
+});
+
+function showChart(name) {
+    ['main','total','weight'].forEach(n => {
+        document.getElementById(n + 'Chart').style.display = n === name ? '' : 'none';
+    });
+    document.querySelectorAll('.btn-group .btn').forEach((b, i) => {
+        b.classList.toggle('active', ['main','total','weight'][i] === name);
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

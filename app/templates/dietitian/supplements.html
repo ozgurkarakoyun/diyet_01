@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Takviyeler – {{ patient.nickname }}{% endblock %}
+{% block page_title %}Takviye Yönetimi{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <h5 class="mb-0 fw-bold">{{ patient.nickname }} – Takviye / Ek Gıda</h5>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2"></i>Yeni Takviye Ekle</h6></div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.product_name.label(class="form-label fw-semibold small") }}
+                        {{ form.product_name(class="form-control form-control-sm") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label fw-semibold small") }}
+                        {{ form.description(class="form-control form-control-sm", rows=3) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.usage_instructions.label(class="form-label fw-semibold small") }}
+                        {{ form.usage_instructions(class="form-control form-control-sm", rows=2,
+                            placeholder="Günde 1 tablet, aç karnına...") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.usage_time.label(class="form-label fw-semibold small") }}
+                        {{ form.usage_time(class="form-control form-control-sm",
+                            placeholder="Sabah, akşam yemeğinden önce...") }}
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col">
+                            {{ form.start_date.label(class="form-label fw-semibold small") }}
+                            {{ form.start_date(class="form-control form-control-sm") }}
+                        </div>
+                        <div class="col">
+                            {{ form.end_date.label(class="form-label fw-semibold small") }}
+                            {{ form.end_date(class="form-control form-control-sm") }}
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.is_active(class="form-check-input") }}
+                        {{ form.is_active.label(class="form-check-label") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg me-1"></i>Ekle
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><h6 class="mb-0 fw-bold">Mevcut Takviyeler</h6></div>
+            <div class="card-body">
+                {% if supplements %}
+                {% for s in supplements %}
+                <div class="border rounded p-3 mb-2 {{ 'opacity-50' if not s.is_active }}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ s.product_name }}</strong>
+                            <span class="badge bg-{{ 'success' if s.is_active else 'secondary' }} ms-1">
+                                {{ 'Aktif' if s.is_active else 'Pasif' }}
+                            </span>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <form method="POST" action="{{ url_for('dietitian.toggle_supplement', supplement_id=s.id) }}">
+                                {{ form.hidden_tag() }}
+                                <button class="btn btn-sm btn-outline-{{ 'warning' if s.is_active else 'success' }}">
+                                    <i class="bi bi-{{ 'pause' if s.is_active else 'play' }}"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('dietitian.delete_supplement', supplement_id=s.id) }}"
+                                  onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                                {{ form.hidden_tag() }}
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    {% if s.description %}<p class="small text-muted mt-1 mb-1">{{ s.description }}</p>{% endif %}
+                    {% if s.usage_instructions %}
+                    <small><i class="bi bi-info-circle me-1"></i>{{ s.usage_instructions }}</small>
+                    {% endif %}
+                    {% if s.usage_time %}
+                    <br><small class="text-success"><i class="bi bi-clock me-1"></i>{{ s.usage_time }}</small>
+                    {% endif %}
+                    {% if s.start_date or s.end_date %}
+                    <br><small class="text-muted">
+                        {{ s.start_date.strftime('%d.%m.%Y') if s.start_date else '?' }}
+                        – {{ s.end_date.strftime('%d.%m.%Y') if s.end_date else 'süresiz' }}
+                    </small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center py-3">Henüz takviye yok.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% block title %}Yapay Zeka Asistanı – DiyetTakip{% endblock %}
+{% block page_title %}🤖 Diyet Asistanı{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-wrapper {
+        max-width: 780px;
+        margin: 0 auto;
+    }
+    .chat-box {
+        height: calc(100vh - 280px);
+        min-height: 380px;
+        overflow-y: auto;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        scroll-behavior: smooth;
+    }
+    .bubble-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+    }
+    .bubble-row.user { flex-direction: row-reverse; }
+
+    .avatar {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .avatar.ai  { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color:#fff; }
+    .avatar.usr { background: #e0e0e0; color: #555; }
+
+    .bubble {
+        max-width: 72%;
+        padding: 0.7rem 1rem;
+        border-radius: 18px;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        word-break: break-word;
+    }
+    .bubble.ai {
+        background: #fff;
+        border: 1px solid #e8f5ee;
+        border-bottom-left-radius: 4px;
+        color: #222;
+    }
+    .bubble.user {
+        background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+    .bubble-time {
+        font-size: 0.68rem;
+        color: #aaa;
+        margin-top: 3px;
+        text-align: right;
+    }
+    .bubble-row.user .bubble-time { text-align: left; }
+
+    .typing-dots span {
+        display: inline-block;
+        width: 7px; height: 7px;
+        background: var(--primary);
+        border-radius: 50%;
+        animation: bounce 1.2s infinite;
+        margin: 0 2px;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-6px); }
+    }
+
+    .input-row {
+        background: #fff;
+        border-top: 1px solid #e8f5ee;
+        padding: 0.75rem 1rem;
+        border-radius: 0 0 12px 12px;
+    }
+    .input-row textarea {
+        resize: none;
+        border-radius: 20px;
+        padding: 0.55rem 1rem;
+        font-size: 0.9rem;
+        border: 1.5px solid #d4edda;
+        transition: border-color 0.2s;
+    }
+    .input-row textarea:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
+        outline: none;
+    }
+    .send-btn {
+        background: var(--primary);
+        border: none;
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.2s, transform 0.1s;
+        flex-shrink: 0;
+    }
+    .send-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .suggestion-chips {
+        display: flex; flex-wrap: wrap; gap: 6px; padding: 0.5rem 1rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    .chip {
+        background: #f0faf4;
+        border: 1px solid #c3e6cb;
+        color: var(--primary);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .chip:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .stage-info-bar {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 12px 12px 0 0;
+        font-size: 0.82rem;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .empty-state {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #aaa;
+        text-align: center;
+        padding: 2rem;
+    }
+    .empty-state .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+
+    @media (max-width: 576px) {
+        .bubble { max-width: 88%; }
+        .chat-box { height: calc(100vh - 320px); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper">
+    <!-- Stage info bar -->
+    <div class="stage-info-bar">
+        <span>🤖</span>
+        <div>
+            <strong>Diyet Asistanı</strong>
+            <span class="ms-2 opacity-75">|</span>
+            <span class="ms-2 opacity-90">
+                {% if patient.current_stage %}
+                    {% if patient.current_stage.is_free_day %}
+                        Serbest Gün
+                    {% else %}
+                        {{ patient.current_stage.stage_number }}. Etap – {{ patient.current_stage.name }}
+                    {% endif %}
+                {% else %}
+                    Etap atanmamış
+                {% endif %}
+            </span>
+        </div>
+        <div class="ms-auto opacity-75" style="font-size:0.75rem;">
+            Yalnızca diyet programınız hakkında yanıt verir
+        </div>
+    </div>
+
+    <!-- Chat card -->
+    <div class="card" style="border-radius: 0 0 12px 12px; border-top: none;">
+        <!-- Messages -->
+        <div class="chat-box" id="chatBox">
+            <div class="empty-state" id="emptyState">
+                <div class="icon">🥗</div>
+                <h6 class="fw-semibold text-muted">Merhaba, {{ patient.nickname }}!</h6>
+                <p class="small text-muted mb-0">
+                    Diyet programınla ilgili her şeyi sorabilirsin.<br>
+                    Ne yiyebileceğini, neyin yasak olduğunu hemen öğren.
+                </p>
+            </div>
+        </div>
+
+        <!-- Quick suggestions -->
+        <div class="suggestion-chips" id="suggestionArea">
+            <span class="chip" onclick="sendSuggestion(this)">Bu etapta ne yiyebilirim?</span>
+            <span class="chip" onclick="sendSuggestion(this)">Kahve içebilir miyim?</span>
+            <span class="chip" onclick="sendSuggestion(this)">Zeytinyağı serbest mi?</span>
+            <span class="chip" onclick="sendSuggestion(this)">Öğün saatlerini açıkla</span>
+            <span class="chip" onclick="sendSuggestion(this)">Su ne kadar içmeliyim?</span>
+        </div>
+
+        <!-- Input -->
+        <div class="input-row">
+            <div class="d-flex align-items-end gap-2">
+                <textarea id="userInput" class="form-control" rows="1"
+                          placeholder="Sorunuzu yazın... (Enter = gönder, Shift+Enter = satır)"
+                          maxlength="1000"></textarea>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Gönder">
+                    <i class="bi bi-send-fill" style="font-size:1rem;margin-left:2px;"></i>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+                <small class="text-muted" style="font-size:0.7rem;">
+                    <i class="bi bi-shield-check me-1 text-success"></i>
+                    Yanıtlar yalnızca diyet programınıza göre verilir
+                </small>
+                <small class="text-muted" id="charCount" style="font-size:0.7rem;">0/1000</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chatBox = document.getElementById('chatBox');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const emptyState = document.getElementById('emptyState');
+const suggestionArea = document.getElementById('suggestionArea');
+const charCount = document.getElementById('charCount');
+
+let conversationHistory = [];
+let isStreaming = false;
+
+// ── Char count ────────────────────────────────────────────────────────────
+userInput.addEventListener('input', function() {
+    charCount.textContent = `${this.value.length}/1000`;
+    autoResize(this);
+});
+
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ── Enter key ──────────────────────────────────────────────────────────────
+userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!isStreaming) sendMessage();
+    }
+});
+
+// ── Suggestion chips ──────────────────────────────────────────────────────
+function sendSuggestion(el) {
+    userInput.value = el.textContent;
+    charCount.textContent = `${userInput.value.length}/1000`;
+    sendMessage();
+}
+
+// ── Add message bubble ────────────────────────────────────────────────────
+function addBubble(role, content, id = null) {
+    const isUser = role === 'user';
+    const now = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+    const row = document.createElement('div');
+    row.className = `bubble-row ${isUser ? 'user' : 'ai'}`;
+    if (id) row.id = id;
+
+    row.innerHTML = `
+        <div class="avatar ${isUser ? 'usr' : 'ai'}">
+            ${isUser ? '👤' : '🤖'}
+        </div>
+        <div>
+            <div class="bubble ${isUser ? 'user' : 'ai'}" id="${id ? id + '_text' : ''}">
+                ${isUser ? escapeHtml(content) : content}
+            </div>
+            <div class="bubble-time">${now}</div>
+        </div>
+    `;
+
+    // Remove empty state
+    if (emptyState.parentNode === chatBox) chatBox.removeChild(emptyState);
+    if (suggestionArea.style.display !== 'none') suggestionArea.style.display = 'none';
+
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return row;
+}
+
+function addTypingIndicator() {
+    const row = document.createElement('div');
+    row.className = 'bubble-row ai';
+    row.id = 'typingRow';
+    row.innerHTML = `
+        <div class="avatar ai">🤖</div>
+        <div class="bubble ai">
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    `;
+    chatBox.appendChild(row);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const el = document.getElementById('typingRow');
+    if (el) el.remove();
+}
+
+function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
+function formatAiText(text) {
+    // Bold: **text**
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic: *text*
+    text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Newlines
+    text = text.replace(/\n/g, '<br>');
+    return text;
+}
+
+// ── Main send ─────────────────────────────────────────────────────────────
+async function sendMessage() {
+    const msg = userInput.value.trim();
+    if (!msg || isStreaming) return;
+
+    isStreaming = true;
+    sendBtn.disabled = true;
+
+    // Add user bubble
+    addBubble('user', msg);
+    conversationHistory.push({ role: 'user', content: msg });
+
+    // Clear input
+    userInput.value = '';
+    charCount.textContent = '0/1000';
+    userInput.style.height = 'auto';
+
+    // Typing indicator
+    addTypingIndicator();
+
+    // AI bubble id
+    const aiId = 'ai_' + Date.now();
+    let aiText = '';
+    let aiBubble = null;
+
+    try {
+        const response = await fetch('/ai/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: msg,
+                history: conversationHistory.slice(-20)
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Sunucu hatası: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        removeTypingIndicator();
+        aiBubble = addBubble('assistant', '<span class="text-muted">...</span>', aiId);
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6).trim();
+                if (data === '[DONE]') break;
+
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.error) {
+                        throw new Error(parsed.error);
+                    }
+                    if (parsed.text) {
+                        aiText += parsed.text;
+                        const textEl = document.getElementById(aiId + '_text');
+                        if (textEl) {
+                            textEl.innerHTML = formatAiText(aiText);
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                    }
+                } catch (parseErr) {
+                    // Skip malformed SSE line
+                }
+            }
+        }
+
+        conversationHistory.push({ role: 'assistant', content: aiText });
+
+    } catch (err) {
+        removeTypingIndicator();
+        const errMsg = `⚠️ Bağlantı hatası: ${err.message}.<br><small class="text-muted">Lütfen sayfayı yenileyip tekrar deneyin.</small>`;
+        if (aiBubble) {
+            const textEl = document.getElementById(aiId + '_text');
+            if (textEl) textEl.innerHTML = errMsg;
+        } else {
+            addBubble('assistant', errMsg);
+        }
+    } finally {
+        isStreaming = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+    }
+}
+</script>
+{% endblock %}
