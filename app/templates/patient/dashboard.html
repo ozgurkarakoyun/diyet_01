@@ -52,17 +52,6 @@
     <div class="col-6 col-md-3">
         <div class="card h-100">
             <div class="card-body text-center p-3">
-                <div style="font-size:1.8rem;">📏</div>
-                <h6 class="fw-bold mt-1 mb-0">
-                    {% if last_measurement %}{{ last_measurement.total_cm()|int }} cm{% else %}—{% endif %}
-                </h6>
-                <small class="text-muted">Toplam ölçüm</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
-        <div class="card h-100">
-            <div class="card-body text-center p-3">
                 <div style="font-size:1.8rem;">⚖️</div>
                 <h6 class="fw-bold mt-1 mb-0">
                     {% if last_measurement and last_measurement.weight %}{{ last_measurement.weight }} kg{% else %}—{% endif %}
@@ -71,6 +60,47 @@
             </div>
         </div>
     </div>
+
+    <!-- VKİ Kartı -->
+    <div class="col-6 col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center p-3">
+                {% set cur_weight = (last_measurement.weight if last_measurement and last_measurement.weight else patient.start_weight) %}
+                {% if patient.height_cm and patient.height_cm > 0 and cur_weight %}
+                  {% set bmi = (cur_weight / ((patient.height_cm / 100) ** 2)) %}
+                  {% if bmi < 18.5 %}
+                    {% set bmi_label = 'Zayıf' %}
+                    {% set bmi_color = '#0096c7' %}
+                    {% set bmi_icon  = '🔵' %}
+                  {% elif bmi < 25 %}
+                    {% set bmi_label = 'Normal' %}
+                    {% set bmi_color = '#2d6a4f' %}
+                    {% set bmi_icon  = '🟢' %}
+                  {% elif bmi < 30 %}
+                    {% set bmi_label = 'Fazla Kilolu' %}
+                    {% set bmi_color = '#f4a261' %}
+                    {% set bmi_icon  = '🟡' %}
+                  {% else %}
+                    {% set bmi_label = 'Obez' %}
+                    {% set bmi_color = '#e63946' %}
+                    {% set bmi_icon  = '🔴' %}
+                  {% endif %}
+                <div style="font-size:1.8rem;">{{ bmi_icon }}</div>
+                <h6 class="fw-bold mt-1 mb-0" style="color:{{ bmi_color }};">
+                    {{ '%.1f'|format(bmi) }}
+                </h6>
+                <small class="text-muted">VKİ – {{ bmi_label }}</small>
+                {% else %}
+                <div style="font-size:1.8rem;">📊</div>
+                <h6 class="fw-bold mt-1 mb-0">—</h6>
+                <small class="text-muted">
+                    <a href="{{ url_for('patient.profile') }}" class="text-decoration-none">Boy girin</a>
+                </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="col-6 col-md-3">
         <div class="card h-100">
             <div class="card-body text-center p-3">
@@ -86,6 +116,7 @@
             </div>
         </div>
     </div>
+
     <div class="col-6 col-md-3">
         <div class="card h-100">
             <div class="card-body text-center p-3">
@@ -185,7 +216,7 @@
     </div>
     {% else %}
     <div class="col-md-6">
-        <div class="card h-100 border-dashed">
+        <div class="card h-100">
             <div class="card-body text-center py-5">
                 <div class="display-5 mb-2">📏</div>
                 <p class="text-muted">Henüz ölçüm eklemediniz.</p>
