@@ -174,6 +174,55 @@ DAVRANMA KURALLARI (KESİNLİKLE UYULMALI):
     return prompt.strip()
 
 
+
+@ai_bp.route('/test')
+@login_required
+def test_api():
+    """Geçici test route"""
+    from flask import jsonify
+    import urllib.error
+
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    result = {
+        'key_exists': bool(api_key),
+        'key_length': len(api_key),
+        'key_prefix': api_key[:12] + '...' if len(api_key) > 12 else 'BOŞ',
+    }
+
+    if not api_key:
+        result['test'] = 'HATA: ANTHROPIC_API_KEY bulunamadı'
+        return jsonify(result)
+
+    try:
+        req = urllib.request.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=json.dumps({
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 10,
+                'messages': [{'role': 'user', 'content': 'hi'}]
+            }).encode(),
+            headers={
+                'Content-Type': 'application/json',
+                'anthropic-version': '2023-06-01',
+                'x-api-key': api_key,
+            }
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            body = json.loads(r.read().decode())
+            result['test'] = 'BASARILI ✅'
+            result['yanit'] = body.get('content', [{}])[0].get('text', '')
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        try:
+            err = json.loads(body)
+            result['test'] = f"HTTP {e.code}: {err.get('error', {}).get('message', body)}"
+        except Exception:
+            result['test'] = f"HTTP {e.code}: {body[:200]}"
+    except Exception as e:
+        result['test'] = f"HATA: {str(e)}"
+
+    return jsonify(result)
+
 @ai_bp.route('/chat')
 @login_required
 def chat():
