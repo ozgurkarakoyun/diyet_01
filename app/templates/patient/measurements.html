@@ -2,13 +2,58 @@
 {% block title %}Ölçümlerim – DiyetTakip{% endblock %}
 {% block page_title %}Ölçümlerim{% endblock %}
 
+{% block extra_css %}
+<style>
+@media (max-width: 991px) {
+    #formPanel {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1050;
+        overflow-y: auto;
+        background: rgba(0,0,0,0.5);
+        padding: 1rem;
+    }
+    #formPanel.open {
+        display: block;
+    }
+    #formInner {
+        background: #fff;
+        border-radius: 12px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+@media (min-width: 992px) {
+    #formPanel  { display: block !important; }
+    #mobileFormBtn { display: none; }
+    #formCloseBtn  { display: none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
+
+<!-- Mobil: Ölçüm Ekle butonu -->
+<div class="d-lg-none mb-3">
+    <button class="btn btn-primary w-100 py-2" id="mobileFormBtn" onclick="openForm()">
+        <i class="bi bi-plus-circle me-2"></i>Yeni Ölçüm Ekle
+    </button>
+</div>
+
 <div class="row g-3">
-    <!-- Add Measurement Form -->
-    <div class="col-lg-4">
-        <div class="card sticky-top" style="top:80px;">
-            <div class="card-header">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-success"></i>Yeni Ölçüm Ekle</h6>
+
+    <!-- Form Paneli -->
+    <div class="col-lg-4" id="formPanel">
+        <div id="formInner" class="card sticky-top" style="top:80px;">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-plus-circle me-2 text-success"></i>Yeni Ölçüm Ekle
+                </h6>
+                <button class="btn btn-sm btn-outline-secondary" id="formCloseBtn"
+                        onclick="closeForm()" title="Kapat">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
             <div class="card-body">
                 <form method="POST" novalidate>
@@ -54,36 +99,42 @@
                         {{ form.notes.label(class="form-label fw-semibold small") }}
                         {{ form.notes(class="form-control form-control-sm", rows=2, placeholder="Notlarınız...") }}
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-save me-2"></i>Kaydet
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-save me-2"></i>Kaydet
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary d-lg-none"
+                                onclick="closeForm()">
+                            Vazgeç
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- History & Charts -->
+    <!-- Geçmiş & Grafik -->
     <div class="col-lg-8">
         {% if measurements|length >= 2 %}
-        <!-- Charts -->
         <div class="card mb-3">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h6 class="mb-0 fw-bold"><i class="bi bi-graph-down-arrow me-2 text-success"></i>Değişim Grafiği</h6>
+                <h6 class="mb-0 fw-bold">
+                    <i class="bi bi-graph-down-arrow me-2 text-success"></i>Değişim Grafiği
+                </h6>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-secondary active" onclick="showChart('main')">Ölçümler</button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="showChart('total')">Toplam</button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="showChart('weight')">Kilo</button>
+                    <button type="button" class="btn btn-outline-secondary active"
+                            onclick="showChart('main')">Ölçümler</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            onclick="showChart('weight')">Kilo</button>
                 </div>
             </div>
             <div class="card-body">
                 <canvas id="mainChart" height="180"></canvas>
-                <canvas id="totalChart" height="180" style="display:none;"></canvas>
                 <canvas id="weightChart" height="180" style="display:none;"></canvas>
             </div>
         </div>
         {% endif %}
 
-        <!-- Measurements Table -->
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>Ölçüm Geçmişi</h6>
@@ -100,13 +151,10 @@
                                 <th>Kalça</th>
                                 <th>Boyun</th>
                                 <th>Kilo</th>
-                                <th>Toplam</th>
                             </tr>
                         </thead>
                         <tbody>
-                        {% set prev = namespace(total=None) %}
                         {% for m in measurements %}
-                        {% set curr_total = m.total_cm() %}
                         <tr>
                             <td class="fw-semibold small">{{ m.date.strftime('%d.%m.%Y') }}</td>
                             <td>{{ m.gobek or '—' }}</td>
@@ -114,19 +162,7 @@
                             <td>{{ m.kalca or '—' }}</td>
                             <td>{{ m.boyun or '—' }}</td>
                             <td>{{ m.weight or '—' }}</td>
-                            <td>
-                                <strong>{{ '%.1f'|format(curr_total) }}</strong>
-                                {% if prev.total is not none %}
-                                {% set diff = curr_total - prev.total %}
-                                {% if diff < 0 %}
-                                <small class="text-success">▼{{ '%.1f'|format(diff|abs) }}</small>
-                                {% elif diff > 0 %}
-                                <small class="text-danger">▲{{ '%.1f'|format(diff) }}</small>
-                                {% endif %}
-                                {% endif %}
-                            </td>
                         </tr>
-                        {% set prev.total = curr_total %}
                         {% endfor %}
                         </tbody>
                     </table>
@@ -135,7 +171,7 @@
                 <div class="text-center py-5">
                     <div class="display-4 mb-2">📏</div>
                     <p class="text-muted">Henüz ölçüm eklenmemiş.</p>
-                    <p class="text-muted small">Soldaki formu kullanarak ilk ölçümünüzü ekleyin.</p>
+                    <p class="text-muted small">Yukarıdaki butonu kullanarak ilk ölçümünüzü ekleyin.</p>
                 </div>
                 {% endif %}
             </div>
@@ -145,14 +181,31 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+function openForm() {
+    document.getElementById('formPanel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeForm() {
+    document.getElementById('formPanel').classList.remove('open');
+    document.body.style.overflow = '';
+}
+// Karanlık overlay'e tıklayınca kapat
+document.getElementById('formPanel').addEventListener('click', function(e) {
+    if (e.target === this) closeForm();
+});
+</script>
+
 {% if measurements|length >= 2 %}
 <script>
 fetch('{{ url_for("patient.measurements_data") }}')
 .then(r => r.json())
 .then(data => {
-    const opts = { responsive: true, plugins: { legend: { position: 'bottom' } },
-                   scales: { y: { beginAtZero: false } } };
-
+    const opts = {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: { y: { beginAtZero: false } }
+    };
     window.charts = {};
 
     charts.main = new Chart(document.getElementById('mainChart'), {
@@ -168,16 +221,6 @@ fetch('{{ url_for("patient.measurements_data") }}')
         options: opts
     });
 
-    charts.total = new Chart(document.getElementById('totalChart'), {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{ label: 'Toplam cm', data: data.total, borderColor: '#2d6a4f',
-                         backgroundColor: 'rgba(45,106,79,0.1)', fill: true, tension: 0.3 }]
-        },
-        options: { ...opts, plugins: { legend: { display: false } } }
-    });
-
     charts.weight = new Chart(document.getElementById('weightChart'), {
         type: 'line',
         data: {
@@ -190,11 +233,11 @@ fetch('{{ url_for("patient.measurements_data") }}')
 });
 
 function showChart(name) {
-    ['main','total','weight'].forEach(n => {
+    ['main','weight'].forEach(n => {
         document.getElementById(n + 'Chart').style.display = n === name ? '' : 'none';
     });
     document.querySelectorAll('.btn-group .btn').forEach((b, i) => {
-        b.classList.toggle('active', ['main','total','weight'][i] === name);
+        b.classList.toggle('active', ['main','weight'][i] === name);
     });
 }
 </script>
