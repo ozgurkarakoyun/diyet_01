@@ -11,6 +11,7 @@ import urllib.error
 from flask import Blueprint, render_template, request, jsonify, abort, stream_with_context, Response
 from flask_login import login_required, current_user
 from app.models import Patient
+from app import csrf
 
 ai_bp = Blueprint('ai', __name__)
 
@@ -217,6 +218,7 @@ def chat():
 
 
 @ai_bp.route('/chat/send', methods=['POST'])
+@csrf.exempt
 @login_required
 def chat_send():
     if not current_user.is_patient():
