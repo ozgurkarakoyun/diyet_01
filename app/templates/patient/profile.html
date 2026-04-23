@@ -1,12 +1,101 @@
 {% extends "base.html" %}
 {% block title %}Profilim – DiyetTakip{% endblock %}
 {% block page_title %}Profilim{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center g-3">
   <div class="col-md-6">
+
+    <!-- VKİ Kartı -->
+    {% if patient.height_cm and patient.height_cm > 0 %}
+    {% set last_w = patient.get_last_measurement() %}
+    {% set weight = (last_w.weight if last_w and last_w.weight else patient.start_weight) %}
+    {% if weight %}
+      {% set bmi = (weight / ((patient.height_cm / 100) ** 2)) %}
+      {% if bmi < 18.5 %}
+        {% set bmi_label = 'Zayıf' %}
+        {% set bmi_color = '#0096c7' %}
+        {% set bmi_icon = '🔵' %}
+        {% set bmi_bar = ((bmi / 40) * 100)|int %}
+      {% elif bmi < 25 %}
+        {% set bmi_label = 'Normal' %}
+        {% set bmi_color = '#2d6a4f' %}
+        {% set bmi_icon = '🟢' %}
+        {% set bmi_bar = ((bmi / 40) * 100)|int %}
+      {% elif bmi < 30 %}
+        {% set bmi_label = 'Fazla Kilolu' %}
+        {% set bmi_color = '#f4a261' %}
+        {% set bmi_icon = '🟡' %}
+        {% set bmi_bar = ((bmi / 40) * 100)|int %}
+      {% else %}
+        {% set bmi_label = 'Obez' %}
+        {% set bmi_color = '#e63946' %}
+        {% set bmi_icon = '🔴' %}
+        {% set bmi_bar = [((bmi / 40) * 100)|int, 100]|min %}
+      {% endif %}
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-heart-pulse me-2 text-success"></i>Vücut Kitle İndeksi (VKİ)</h6>
+      </div>
+      <div class="card-body text-center py-3">
+        <div class="mb-2" style="font-size:2.5rem; font-weight:800; color:{{ bmi_color }};">
+          {{ '%.1f'|format(bmi) }}
+        </div>
+        <div class="mb-3">
+          <span class="badge px-3 py-2 fs-6" style="background:{{ bmi_color }};">
+            {{ bmi_icon }} {{ bmi_label }}
+          </span>
+        </div>
+        <!-- VKİ Skalası -->
+        <div class="position-relative mb-1">
+          <div class="d-flex rounded-pill overflow-hidden" style="height:12px;">
+            <div style="flex:18.5; background:#0096c7;"></div>
+            <div style="flex:6.5;  background:#2d6a4f;"></div>
+            <div style="flex:5;    background:#f4a261;"></div>
+            <div style="flex:10;   background:#e63946;"></div>
+          </div>
+          <!-- İşaretçi -->
+          <div style="position:absolute; top:-4px; left:{{ [bmi_bar, 96]|min }}%;
+                      transform:translateX(-50%); width:20px; height:20px;
+                      background:{{ bmi_color }}; border:2px solid #fff;
+                      border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.3);">
+          </div>
+        </div>
+        <div class="d-flex justify-content-between px-1 mt-1">
+          <small class="text-muted" style="font-size:0.68rem;">Zayıf<br>&lt;18.5</small>
+          <small class="text-muted" style="font-size:0.68rem;">Normal<br>18.5–25</small>
+          <small class="text-muted" style="font-size:0.68rem;">Fazla<br>25–30</small>
+          <small class="text-muted" style="font-size:0.68rem;">Obez<br>&gt;30</small>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+          Boy: <strong>{{ patient.height_cm|int }} cm</strong> &nbsp;|&nbsp;
+          Kilo: <strong>{{ weight }} kg</strong>
+          {% if last_w and last_w.weight %}
+          &nbsp;<span class="badge bg-light text-muted border">Son ölçümden</span>
+          {% else %}
+          &nbsp;<span class="badge bg-light text-muted border">Başlangıç kilosundan</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Profil Formu -->
     <div class="card">
-      <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-person-circle me-2"></i>Profil Bilgileri</h6></div>
+      <div class="card-header">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-person-circle me-2"></i>Profil Bilgileri</h6>
+      </div>
       <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }} alert-dismissible fade show py-2">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endwith %}
+
         <form method="POST" novalidate>
           {{ form.hidden_tag() }}
           <div class="mb-3">
@@ -22,25 +111,30 @@
             {{ form.gender.label(class="form-label fw-semibold") }}
             {{ form.gender(class="form-select") }}
           </div>
-          <div class="row g-2 mb-3">
+          <div class="row g-2 mb-4">
             <div class="col">
               {{ form.height_cm.label(class="form-label fw-semibold") }}
               {{ form.height_cm(class="form-control", placeholder="170") }}
+              <div class="form-text">VKİ hesabı için gerekli</div>
             </div>
             <div class="col">
               {{ form.start_weight.label(class="form-label fw-semibold") }}
               {{ form.start_weight(class="form-control", placeholder="70") }}
             </div>
           </div>
-          <button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-2"></i>Güncelle</button>
+          <button type="submit" class="btn btn-primary w-100">
+            <i class="bi bi-save me-2"></i>Güncelle
+          </button>
         </form>
         <hr>
         <div class="text-muted small">
           <p class="mb-1"><i class="bi bi-envelope me-2"></i>{{ patient.user.email }}</p>
+          <p class="mb-1"><i class="bi bi-person me-2"></i>{{ patient.dietitian.name }}</p>
           <p class="mb-0"><i class="bi bi-calendar3 me-2"></i>Kayıt: {{ patient.created_at.strftime('%d.%m.%Y') }}</p>
         </div>
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}
