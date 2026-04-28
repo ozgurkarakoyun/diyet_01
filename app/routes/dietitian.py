@@ -2,7 +2,7 @@ import secrets
 from datetime import datetime, date, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
-from app import db
+from app import db, csrf
 from app.models import (User, Dietitian, Patient, DietStage, PatientStageHistory,
                         Measurement, Supplement, Message, RegistrationCode)
 from app.forms import (MessageForm, SupplementForm, RegistrationCodeForm,
@@ -322,6 +322,7 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/ai-assist', methods=['POST'])
+@csrf.exempt
 def ai_assist(patient_id):
     """Hasta verileri üzerinden AI yardımı — Anthropic API çağrısı."""
     import os, requests as req
@@ -330,12 +331,10 @@ def ai_assist(patient_id):
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
 
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
     user_question = (data or {}).get('question', '').strip()
     if not user_question:
         return jsonify({'error': 'Soru boş olamaz.'}), 400
-
-    # Hasta özeti oluştur
     last_m = patient.get_last_measurement()
     bmi_str = ''
     if last_m and last_m.weight and patient.height_cm:
@@ -406,13 +405,14 @@ Yalnızca bu program çerçevesinde önerilerde bulun."""
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/update-notes', methods=['POST'])
+@csrf.exempt
 def update_patient_notes(patient_id):
     """Hasta kişisel program notlarını güncelle."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
-    data = request.get_json()
+    data = request.get_json(force=True, silent=True)
     patient.notes = (data or {}).get('notes', '').strip()
     db.session.commit()
     return jsonify({'ok': True})
