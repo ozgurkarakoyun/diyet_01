@@ -426,45 +426,95 @@
 
             <!-- TAB: KİŞİSEL PROGRAM -->
             <div class="tab-pane fade" id="tab-program">
+
+                <!-- Diyetisyen İç Notları -->
                 <div class="card mb-3">
-                    <div class="card-header d-flex align-items-center gap-2">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2 text-warning"></i>Kişiye Özel Program Notları</h6>
-                        <span class="badge bg-warning text-dark ms-auto">Sadece diyetisyen görür</span>
+                    <div class="card-header d-flex align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-lock me-2 text-secondary"></i>Diyetisyen İç Notları</h6>
+                        <span class="badge bg-secondary ms-auto">Hasta göremez</span>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-2">
-                            Bu hastaya özel program değişiklikleri, istisnalar ve notları buraya yazın.
-                            Hasta bu notları göremez. AI yardımı da bu notları dikkate alır.
+                        <textarea id="internalNotesArea" class="form-control personal-notes-area mb-2" rows="3"
+                                  placeholder="İstisna, uyarı, ilaç notu, hatırlatıcı... (Hasta göremez)">{{ patient.notes or '' }}</textarea>
+                        <button class="btn btn-sm btn-secondary" onclick="saveInternalNotes()">
+                            <i class="bi bi-floppy me-1"></i>İç Notu Kaydet
+                        </button>
+                        <span id="internalNoteStatus" class="text-muted small ms-2"></span>
+                    </div>
+                </div>
+
+                <!-- AI ile Kişisel Program Oluştur -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>AI ile Kişisel Program Oluştur</h6>
+                        <span class="badge bg-primary ms-auto">Claude AI</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Hastanın verilerine göre AI kişiselleştirilmiş bir program taslağı oluşturur.
+                            Düzenleyip onayladıktan sonra hastanın sayfasına yayınlarsınız.
                         </p>
-                        <textarea id="personalNotesArea" class="form-control personal-notes-area mb-2"
-                                  rows="6" placeholder="Örnek: Hasta laktozu kesiyor, 1. etapta yoğurt çıkarıldı. Kabızlık protokolü uygulanıyor. Serbest günde bakliyat kısıtlandı...">{{ patient.notes or '' }}</textarea>
-                        <div class="d-flex gap-2 align-items-center">
-                            <button class="btn btn-warning btn-sm" onclick="saveNotes()">
-                                <i class="bi bi-floppy me-1"></i>Kaydet
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Özel Talimat (opsiyonel):</label>
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Laktoz intoleransı var, yoğurt çıkar.')">🥛 Laktoz</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Kabızlık protokolü ekle.')">💊 Kabızlık</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Kilo durdu, motivasyon ver ve kilo durması protokolünü ekle.')">⚖️ Kilo Durdu</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Ramazan programına göre düzenle.')">🌙 Ramazan</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Çok yoğun egzersiz yapıyor, protein miktarını artır.')">🏃 Egzersiz</button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="addInstruction('Balık alerjisi var, menüden çıkar.')">🐟 Balık Alerjisi</button>
+                            </div>
+                            <textarea id="aiInstructions" class="form-control form-control-sm" rows="2"
+                                      placeholder="Örn: Diyabet hastası, meyveyi kısıtla. Veya: Çok yorgun, motivasyon ver..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2 mb-3">
+                            <button class="btn btn-primary" onclick="generateProgram()" id="generateBtn">
+                                <i class="bi bi-magic me-1"></i>AI ile Program Oluştur
                             </button>
-                            <span id="notesSaveStatus" class="text-muted small"></span>
+                            <div id="generateThinking" style="display:none" class="d-flex align-items-center gap-1 text-muted small">
+                                <span class="ai-thinking"></span><span class="ai-thinking"></span><span class="ai-thinking"></span>
+                                <span class="ms-1">Oluşturuluyor...</span>
+                            </div>
+                        </div>
+
+                        <!-- AI Önizleme -->
+                        <div id="programPreview" style="display:none">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-semibold small"><i class="bi bi-eye me-1"></i>AI Taslağı — Düzenleyip Yayınlayın</span>
+                                <button class="btn btn-xs btn-sm btn-outline-secondary" onclick="copyToEditor()">
+                                    <i class="bi bi-arrow-down me-1"></i>Editöre Kopyala
+                                </button>
+                            </div>
+                            <div id="programPreviewContent" class="ai-bubble mb-2" style="max-height:300px;overflow-y:auto"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hızlı Değişiklik Şablonları -->
+                <!-- Program Editörü & Yayınla -->
                 <div class="card">
-                    <div class="card-header">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-lightning me-2 text-info"></i>Hızlı Şablonlar</h6>
+                    <div class="card-header d-flex align-items-center">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2 text-success"></i>Kişisel Program (Hastaya Gösterilecek)</h6>
+                        <span class="badge bg-success ms-auto">Hasta görür</span>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted small mb-3">Tıklayarak nota ekleyin:</p>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('⚠️ Kabızlık protokolü uygulanıyor (gece kayısı-ceviz, magnezyum).')">💊 Kabızlık Protokolü</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🥛 Laktoz intoleransı: yoğurt çıkarıldı, yerine zeytinyağlı salata.')">🥛 Laktoz İntoleransı</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('⚖️ Kilo verme durdu — maydanoz-limon karışımı başlandı (gün aşırı).')">⚖️ Kilo Durması</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🌙 Ramazan programına alındı (4 günlük üç aylar planı).')">🌙 Ramazan Programı</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🚫 Kırmızı et kısıtlandı — dini/kişisel tercih.')">🚫 Kırmızı Et Kısıtı</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🐟 Balık alerjisi: deniz ürünleri menüden çıkarıldı.')">🐟 Balık Alerjisi</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🥚 Yumurta alerjisi: yumurta menüden çıkarıldı.')">🥚 Yumurta Alerjisi</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🏃 Yoğun egzersiz yapıyor: 3. etaptan itibaren protein miktarı artırıldı.')">🏃 Egzersiz Artışı</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('👩‍⚕️ Tiroid hastası — iyotlu tuz kullanımı dikkatli olunacak.')">👩‍⚕️ Tiroid Hastası</button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('💉 Diyabet: şeker içeren gıdalar ve meyve sıkı kontrol altında.')">💉 Diyabet</button>
+                        <p class="text-muted small mb-2">Bu alan doğrudan hastanın "Diyet Programım" sayfasında görünür.</p>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="appendToProgram('🎯 Senin İçin Özel Notlar\n')">+ Başlık Ekle</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="appendToProgram('✅ ')">+ ✅ Madde</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="appendToProgram('🚫 ')">+ 🚫 Yasak</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="appendToProgram('💊 ')">+ 💊 Takviye</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="appendToProgram('💪 ')">+ 💪 Motivasyon</button>
+                        </div>
+                        <textarea id="personalProgramArea" class="form-control personal-notes-area mb-2" rows="10"
+                                  placeholder="Hasta için kişiselleştirilmiş program buraya yazılır veya AI taslağı buraya kopyalanır...">{{ patient.personal_program or '' }}</textarea>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-success" onclick="savePersonalProgram()">
+                                <i class="bi bi-send me-1"></i>Hastaya Yayınla
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="clearProgram()">
+                                <i class="bi bi-trash me-1"></i>Temizle
+                            </button>
+                            <span id="programSaveStatus" class="text-muted small ms-1"></span>
                         </div>
                     </div>
                 </div>
@@ -584,13 +634,14 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// ── AI Yardımı ────────────────────────────────────────────────────────────────
 const patientId = {{ patient.id }};
-const aiAssistUrl = "{{ url_for('dietitian.ai_assist', patient_id=patient.id) }}";
-const updateNotesUrl = "{{ url_for('dietitian.update_patient_notes', patient_id=patient.id) }}";
+const aiAssistUrl        = "{{ url_for('dietitian.ai_assist', patient_id=patient.id) }}";
+const updateNotesUrl     = "{{ url_for('dietitian.update_patient_notes', patient_id=patient.id) }}";
+const generateProgramUrl = "{{ url_for('dietitian.ai_generate_program', patient_id=patient.id) }}";
 console.log('AI URL:', aiAssistUrl);
 console.log('Notes URL:', updateNotesUrl);
 
+// ── AI Yardımı ────────────────────────────────────────────────────────────────
 function askAI(question) {
     document.getElementById('aiQuestion').value = question;
     sendAIQuestion();
@@ -599,12 +650,10 @@ function askAI(question) {
 async function sendAIQuestion() {
     const q = document.getElementById('aiQuestion').value.trim();
     if (!q) return;
-
     document.getElementById('aiResponseArea').style.display = 'none';
     document.getElementById('aiError').style.display = 'none';
     document.getElementById('aiThinking').style.display = 'block';
     document.getElementById('aiSendBtn').disabled = true;
-
     try {
         const res = await fetch(aiAssistUrl, {
             method: 'POST',
@@ -633,10 +682,10 @@ document.getElementById('aiQuestion')?.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.ctrlKey) sendAIQuestion();
 });
 
-// ── Kişisel Notlar ────────────────────────────────────────────────────────────
-async function saveNotes() {
-    const notes = document.getElementById('personalNotesArea').value;
-    const status = document.getElementById('notesSaveStatus');
+// ── Kişisel Program ───────────────────────────────────────────────────────────
+async function saveInternalNotes() {
+    const notes = document.getElementById('internalNotesArea').value;
+    const status = document.getElementById('internalNoteStatus');
     status.textContent = 'Kaydediliyor...';
     try {
         const res = await fetch(updateNotesUrl, {
@@ -648,16 +697,74 @@ async function saveNotes() {
         const data = await res.json();
         status.textContent = data.ok ? '✅ Kaydedildi' : '❌ Hata';
         setTimeout(() => status.textContent = '', 3000);
-    } catch(e) {
-        status.textContent = '❌ Bağlantı hatası';
+    } catch(e) { status.textContent = '❌ ' + e.message; }
+}
+
+async function savePersonalProgram() {
+    const personal_program = document.getElementById('personalProgramArea').value;
+    const status = document.getElementById('programSaveStatus');
+    status.textContent = 'Yayınlanıyor...';
+    try {
+        const res = await fetch(updateNotesUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ personal_program })
+        });
+        const data = await res.json();
+        status.textContent = data.ok ? '✅ Hastaya yayınlandı!' : '❌ Hata';
+        setTimeout(() => status.textContent = '', 4000);
+    } catch(e) { status.textContent = '❌ ' + e.message; }
+}
+
+async function generateProgram() {
+    const instructions = document.getElementById('aiInstructions').value.trim();
+    document.getElementById('generateBtn').disabled = true;
+    document.getElementById('generateThinking').style.display = 'flex';
+    document.getElementById('programPreview').style.display = 'none';
+    try {
+        const res = await fetch(generateProgramUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ instructions })
+        });
+        const data = await res.json();
+        if (data.program) {
+            document.getElementById('programPreviewContent').textContent = data.program;
+            document.getElementById('programPreview').style.display = 'block';
+        } else {
+            alert('Hata: ' + (data.error || 'Yanıt alınamadı'));
+        }
+    } catch(e) { alert('Bağlantı hatası: ' + e.message); }
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generateThinking').style.display = 'none';
+}
+
+function copyToEditor() {
+    const preview = document.getElementById('programPreviewContent').textContent;
+    const editor = document.getElementById('personalProgramArea');
+    editor.value = preview;
+    editor.scrollIntoView({ behavior: 'smooth' });
+    editor.focus();
+}
+
+function appendToProgram(text) {
+    const area = document.getElementById('personalProgramArea');
+    const pos = area.selectionStart;
+    area.value = area.value.slice(0, pos) + text + area.value.slice(pos);
+    area.focus();
+}
+
+function clearProgram() {
+    if (confirm('Kişisel programı temizlemek istediğinize emin misiniz?')) {
+        document.getElementById('personalProgramArea').value = '';
     }
 }
 
-function addNote(text) {
-    const area = document.getElementById('personalNotesArea');
-    const existing = area.value.trim();
-    area.value = existing ? existing + '\n' + text : text;
-    area.focus();
+function addInstruction(text) {
+    const area = document.getElementById('aiInstructions');
+    area.value = area.value ? area.value + ' ' + text : text;
 }
 
 // Mesaj scroll
