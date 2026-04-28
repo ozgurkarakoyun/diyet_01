@@ -638,8 +638,6 @@ const patientId = {{ patient.id }};
 const aiAssistUrl        = "{{ url_for('dietitian.ai_assist', patient_id=patient.id) }}";
 const updateNotesUrl     = "{{ url_for('dietitian.update_patient_notes', patient_id=patient.id) }}";
 const generateProgramUrl = "{{ url_for('dietitian.ai_generate_program', patient_id=patient.id) }}";
-console.log('AI URL:', aiAssistUrl);
-console.log('Notes URL:', updateNotesUrl);
 
 // CSRF token helper
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';

@@ -253,9 +253,10 @@
                 </a>
             </div>
             <div class="col-6 col-md-3">
-                <a href="{{ url_for('patient.diet_rules') }}" class="btn btn-outline-info w-100 py-3">
+                <a href="{{ url_for('patient.diet_rules') }}"
+                   class="btn w-100 py-3 {{ 'btn-success' if patient.personal_program else 'btn-outline-info' }}">
                     <i class="bi bi-journal-text d-block fs-4 mb-1"></i>
-                    <small>Diyet Kuralları</small>
+                    <small>{{ '⭐ Özel Programım' if patient.personal_program else 'Diyet Kuralları' }}</small>
                 </a>
             </div>
             <div class="col-12 col-md-6">

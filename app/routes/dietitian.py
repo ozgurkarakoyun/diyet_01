@@ -324,7 +324,6 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/ai-assist', methods=['POST'])
-@csrf.exempt
 def ai_assist(patient_id):
     """Hasta verileri üzerinden AI yardımı — Anthropic API çağrısı."""
     if not current_user.is_authenticated:
@@ -406,7 +405,6 @@ Yalnızca bu program çerçevesinde önerilerde bulun."""
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/update-notes', methods=['POST'])
-@csrf.exempt
 def update_patient_notes(patient_id):
     """Hasta iç notları ve kişisel programı güncelle."""
     if not current_user.is_authenticated:
@@ -427,7 +425,6 @@ def update_patient_notes(patient_id):
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/ai-generate-program', methods=['POST'])
-@csrf.exempt
 def ai_generate_program(patient_id):
     """AI ile kişisel program taslağı oluştur."""
     if not current_user.is_authenticated:

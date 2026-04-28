@@ -36,20 +36,15 @@ def create_app(config_class=Config):
     app.register_blueprint(ai_bp, url_prefix='/ai')
     app.register_blueprint(main_bp)
 
+    # CSRF muafiyetlerini blueprint kaydından SONRA uygula
+    from app.routes.dietitian import ai_assist, update_patient_notes, ai_generate_program
+    csrf.exempt(ai_assist)
+    csrf.exempt(update_patient_notes)
+    csrf.exempt(ai_generate_program)
+
     # Error handlers
     from app.routes.errors import register_error_handlers
     register_error_handlers(app)
-
-    # Eksik sütunları güvenli şekilde ekle (migration çalışmadıysa fallback)
-    with app.app_context():
-        try:
-            with db.engine.connect() as conn:
-                conn.execute(db.text(
-                    "ALTER TABLE patients ADD COLUMN IF NOT EXISTS personal_program TEXT"
-                ))
-                conn.commit()
-        except Exception:
-            pass  # Sütun zaten varsa veya SQLite kullanılıyorsa geç
 
     # Context processors
     from datetime import datetime
