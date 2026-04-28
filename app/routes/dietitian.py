@@ -1,4 +1,6 @@
+import os
 import secrets
+import requests
 from datetime import datetime, date, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
@@ -325,7 +327,6 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
 @csrf.exempt
 def ai_assist(patient_id):
     """Hasta verileri üzerinden AI yardımı — Anthropic API çağrısı."""
-    import os, requests as req
     if not current_user.is_authenticated:
         return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
@@ -380,7 +381,7 @@ Yalnızca bu program çerçevesinde önerilerde bulun."""
 
     try:
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
-        resp = req.post(
+        resp = requests.post(
             'https://api.anthropic.com/v1/messages',
             headers={
                 'x-api-key': api_key,
@@ -425,7 +426,6 @@ def update_patient_notes(patient_id):
 @csrf.exempt
 def ai_generate_program(patient_id):
     """AI ile kişisel program taslağı oluştur."""
-    import os, requests as req
     if not current_user.is_authenticated:
         return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
@@ -477,7 +477,7 @@ Türkçe yaz. Maksimum 400 kelime."""
     try:
         api_key = os.getenv('ANTHROPIC_API_KEY', '')
         prompt = f"Hasta bilgileri:\n{patient_summary}\n\nDiyetisyen talimatları: {instructions if instructions else 'Standart kişisel program oluştur.'}"
-        resp = req.post(
+        resp = requests.post(
             'https://api.anthropic.com/v1/messages',
             headers={
                 'x-api-key': api_key,
