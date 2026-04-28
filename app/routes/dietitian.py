@@ -322,10 +322,11 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/ai-assist', methods=['POST'])
-@login_required
 def ai_assist(patient_id):
     """Hasta verileri üzerinden AI yardımı — Anthropic API çağrısı."""
     import os, requests as req
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
 
@@ -405,9 +406,10 @@ Yalnızca bu program çerçevesinde önerilerde bulun."""
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/update-notes', methods=['POST'])
-@login_required
 def update_patient_notes(patient_id):
     """Hasta kişisel program notlarını güncelle."""
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
     data = request.get_json()
