@@ -55,7 +55,7 @@ def patient_detail(patient_id):
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
     stages = DietStage.query.order_by(DietStage.order).all()
-    measurements = patient.measurements.order_by(Measurement.date.desc()).limit(10).all()
+    measurements = patient.measurements.order_by(Measurement.date.asc()).all()
     supplements = patient.supplements.order_by(Supplement.created_at.desc()).all()
     stage_history = patient.stage_history.order_by(PatientStageHistory.start_date.desc()).limit(20).all()
 
