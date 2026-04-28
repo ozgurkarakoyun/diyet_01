@@ -712,7 +712,7 @@ async function savePersonalProgram() {
     try {
         const res = await apiFetch(updateNotesUrl, { personal_program });
         const data = await res.json();
-        status.textContent = data.ok ? '✅ Hastaya yayınlandı!' : '❌ Hata';
+        status.textContent = data.ok ? '✅ Hastaya yayınlandı!' : ('❌ ' + (data.error || 'Hata'));
         setTimeout(() => status.textContent = '', 4000);
     } catch(e) { status.textContent = '❌ ' + e.message; }
 }

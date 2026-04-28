@@ -414,12 +414,16 @@ def update_patient_notes(patient_id):
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
     data = request.get_json(force=True, silent=True)
-    if 'notes' in (data or {}):
-        patient.notes = data.get('notes', '').strip()
-    if 'personal_program' in (data or {}):
-        patient.personal_program = data.get('personal_program', '').strip()
-    db.session.commit()
-    return jsonify({'ok': True})
+    try:
+        if 'notes' in (data or {}):
+            patient.notes = data.get('notes', '').strip()
+        if 'personal_program' in (data or {}):
+            patient.personal_program = data.get('personal_program', '').strip()
+        db.session.commit()
+        return jsonify({'ok': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/ai-generate-program', methods=['POST'])
