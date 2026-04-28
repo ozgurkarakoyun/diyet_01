@@ -407,15 +407,96 @@ Yalnızca bu program çerçevesinde önerilerde bulun."""
 @dietitian_bp.route('/patient/<int:patient_id>/update-notes', methods=['POST'])
 @csrf.exempt
 def update_patient_notes(patient_id):
-    """Hasta kişisel program notlarını güncelle."""
+    """Hasta iç notları ve kişisel programı güncelle."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Oturum açık değil.'}), 401
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
     data = request.get_json(force=True, silent=True)
-    patient.notes = (data or {}).get('notes', '').strip()
+    if 'notes' in (data or {}):
+        patient.notes = data.get('notes', '').strip()
+    if 'personal_program' in (data or {}):
+        patient.personal_program = data.get('personal_program', '').strip()
     db.session.commit()
     return jsonify({'ok': True})
+
+
+@dietitian_bp.route('/patient/<int:patient_id>/ai-generate-program', methods=['POST'])
+@csrf.exempt
+def ai_generate_program(patient_id):
+    """AI ile kişisel program taslağı oluştur."""
+    import os, requests as req
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Oturum açık değil.'}), 401
+    dietitian = get_current_dietitian()
+    patient = get_patient_or_404(patient_id, dietitian)
+
+    data = request.get_json(force=True, silent=True)
+    instructions = (data or {}).get('instructions', '').strip()
+
+    last_m = patient.get_last_measurement()
+    bmi_str = ''
+    if last_m and last_m.weight and patient.height_cm:
+        bmi = round(last_m.weight / ((patient.height_cm / 100) ** 2), 1)
+        bmi_str = f', BKİ={bmi}'
+
+    stage_name = patient.current_stage.name if patient.current_stage else 'Etap atanmamış'
+
+    patient_summary = (
+        f"Hasta: {patient.nickname}, "
+        f"Cinsiyet: {'Kadın' if patient.gender=='female' else 'Erkek' if patient.gender=='male' else '?'}, "
+        f"Boy: {patient.height_cm or '?'} cm{bmi_str}, "
+        f"Aktif etap: {stage_name} ({patient.get_days_in_current_stage()}. gün), "
+        f"Döngü: {patient.cycle_number}"
+    )
+    if last_m:
+        patient_summary += (
+            f"\nSon ölçüm ({last_m.date}): kilo={last_m.weight}, "
+            f"göbek={last_m.gobek}, bel={last_m.bel}, kalça={last_m.kalca}"
+        )
+    if patient.notes:
+        patient_summary += f"\nDiyetisyen notları: {patient.notes}"
+    if patient.personal_program:
+        patient_summary += f"\nMevcut kişisel program:\n{patient.personal_program}"
+
+    system_prompt = """Sen deneyimli bir diyetisyenin asistanısın. Hastaya özel, kişiselleştirilmiş diyet programı metni yazıyorsun.
+
+Bu metin doğrudan HASTAYA gösterilecek — nazik, teşvik edici ve anlaşılır yaz.
+Teknik jargon kullanma. Madde madde, net ve uygulanabilir yaz.
+
+Program şu başlıkları içermeli (gerekli olanları):
+- 🎯 Senin İçin Özel Notlar
+- ✅ Yiyebileceklerin (etabına göre)
+- 🚫 Dikkat Etmen Gerekenler  
+- 💊 Takviye / Protokol (varsa)
+- 💪 Motivasyon
+
+Sadece hastanın mevcut etabıyla ilgili bilgileri yaz. Diğer etapları detaylandırma.
+Türkçe yaz. Maksimum 400 kelime."""
+
+    try:
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        prompt = f"Hasta bilgileri:\n{patient_summary}\n\nDiyetisyen talimatları: {instructions if instructions else 'Standart kişisel program oluştur.'}"
+        resp = req.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            },
+            json={
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 1024,
+                'system': system_prompt,
+                'messages': [{'role': 'user', 'content': prompt}]
+            },
+            timeout=30
+        )
+        resp.raise_for_status()
+        program_text = resp.json()['content'][0]['text']
+        return jsonify({'program': program_text})
+    except Exception as e:
+        return jsonify({'error': f'AI yanıt alınamadı: {str(e)}'}), 500
 
 
 def _auto_advance_stage(patient):
