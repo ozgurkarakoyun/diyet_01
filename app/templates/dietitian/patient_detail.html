@@ -13,6 +13,11 @@
 .measure-table td { font-size:.82rem; }
 .chart-container { position:relative; height:260px; }
 .tab-nav .nav-link { font-size:.85rem; padding:.4rem .8rem; }
+.navy-ref { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.75rem; font-weight:600; }
+.navy-excellent { background:#d1e7dd; color:#0a3622; }
+.navy-good      { background:#cfe2ff; color:#084298; }
+.navy-average   { background:#fff3cd; color:#664d03; }
+.navy-obese     { background:#f8d7da; color:#842029; }
 </style>
 {% endblock %}
 
@@ -299,6 +304,50 @@
                     </div>
                 </div>
 
+                <!-- US Navy Yağ Oranı -->
+                {% if patient.gender in ['male','female'] and patient.height_cm %}
+                <div class="card mb-3">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-shield-check me-2 text-primary"></i>US Navy Vücut Yağ Oranı</h6>
+                        <span class="badge bg-primary ms-auto">ABD Donanması Yöntemi</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-3 text-center">
+                                <div class="text-muted small mb-1">Son Ölçüm</div>
+                                <div id="navyVal" class="display-5 fw-bold text-primary">—</div>
+                                <div id="navyBadge" class="mt-1"></div>
+                                <div id="navyDate" class="text-muted small mt-1"></div>
+                                <div id="navyMass" class="text-muted small mt-1"></div>
+                            </div>
+                            <div class="col-md-3">
+                                <table class="table table-sm table-bordered mb-0" style="font-size:.78rem">
+                                    <thead class="table-light"><tr><th>Kategori</th><th>{{ 'Erkek' if patient.gender == 'male' else 'Kadın' }}</th></tr></thead>
+                                    <tbody>
+                                    {% if patient.gender == 'male' %}
+                                    <tr><td><span class="navy-ref navy-excellent">Mükemmel</span></td><td>%6–13</td></tr>
+                                    <tr><td><span class="navy-ref navy-good">İyi</span></td><td>%14–17</td></tr>
+                                    <tr><td><span class="navy-ref navy-average">Ortalama</span></td><td>%18–24</td></tr>
+                                    <tr><td><span class="navy-ref navy-obese">Obez</span></td><td>%25+</td></tr>
+                                    {% else %}
+                                    <tr><td><span class="navy-ref navy-excellent">Mükemmel</span></td><td>%14–20</td></tr>
+                                    <tr><td><span class="navy-ref navy-good">İyi</span></td><td>%21–24</td></tr>
+                                    <tr><td><span class="navy-ref navy-average">Ortalama</span></td><td>%25–31</td></tr>
+                                    <tr><td><span class="navy-ref navy-obese">Obez</span></td><td>%32+</td></tr>
+                                    {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <div style="position:relative;height:180px">
+                                    <canvas id="navyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% else %}
                 <div class="card"><div class="card-body text-center text-muted py-5">Henüz ölçüm girilmemiş.</div></div>
                 {% endif %}
@@ -477,6 +526,101 @@ new Chart(document.getElementById('weightBmiChart'), {
         }
     }
 });
+
+// ── US Navy Yağ Oranı ────────────────────────────────────────────────────────
+{% if patient.gender in ['male','female'] and patient.height_cm %}
+function navyFat(gender, boyun, bel, kalca, height) {
+    let denom;
+    if (gender === 'male') {
+        const diff = bel - boyun;
+        if (diff <= 0) return null;
+        denom = 1.0324 - 0.19077 * Math.log10(diff) + 0.15456 * Math.log10(height);
+    } else {
+        const diff = bel + kalca - boyun;
+        if (diff <= 0) return null;
+        denom = 1.29579 - 0.35004 * Math.log10(diff) + 0.22100 * Math.log10(height);
+    }
+    if (denom <= 0) return null;
+    return Math.round((495 / denom - 450) * 10) / 10;
+}
+function navyCat(gender, pct) {
+    if (gender === 'male') {
+        if (pct <= 13) return ['Mükemmel','navy-excellent'];
+        if (pct <= 17) return ['İyi','navy-good'];
+        if (pct <= 24) return ['Ortalama','navy-average'];
+        return ['Obez','navy-obese'];
+    } else {
+        if (pct <= 20) return ['Mükemmel','navy-excellent'];
+        if (pct <= 24) return ['İyi','navy-good'];
+        if (pct <= 31) return ['Ortalama','navy-average'];
+        return ['Obez','navy-obese'];
+    }
+}
+
+const navyGender = "{{ patient.gender }}";
+const navyHeight = {{ patient.height_cm }};
+const navyMeasurements = [
+    {% for m in measurements %}
+    { date:"{{ m.date.strftime('%d.%m.%Y') }}", boyun:{{ m.boyun or 'null' }}, bel:{{ m.bel or 'null' }}, kalca:{{ m.kalca or 'null' }}, weight:{{ m.weight or 'null' }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Zaman serisi
+const navyLabels = [], navyData = [];
+navyMeasurements.forEach(m => {
+    const ok = navyGender === 'male' ? (m.boyun && m.bel) : (m.boyun && m.bel && m.kalca);
+    const pct = ok ? navyFat(navyGender, m.boyun, m.bel, m.kalca||0, navyHeight) : null;
+    navyLabels.push(m.date);
+    navyData.push((pct && pct > 0) ? pct : null);
+});
+
+// Son geçerli değer
+let lastNavy = null;
+for (let i = navyMeasurements.length - 1; i >= 0; i--) {
+    const m = navyMeasurements[i];
+    const ok = navyGender === 'male' ? (m.boyun && m.bel) : (m.boyun && m.bel && m.kalca);
+    if (ok) { lastNavy = m; break; }
+}
+if (lastNavy) {
+    const pct = navyFat(navyGender, lastNavy.boyun, lastNavy.bel, lastNavy.kalca||0, navyHeight);
+    if (pct && pct > 0) {
+        const [cat, cls] = navyCat(navyGender, pct);
+        document.getElementById('navyVal').textContent = '%' + pct;
+        document.getElementById('navyBadge').innerHTML = `<span class="navy-ref ${cls}">${cat}</span>`;
+        document.getElementById('navyDate').textContent = lastNavy.date;
+        if (lastNavy.weight) {
+            const fm = Math.round(lastNavy.weight * pct / 100 * 10) / 10;
+            const lm = Math.round((lastNavy.weight - fm) * 10) / 10;
+            document.getElementById('navyMass').textContent = `Yağ: ${fm} kg | Yağsız: ${lm} kg`;
+        }
+    }
+}
+
+{% if patient.gender == 'male' %}
+const navyRefs = [{v:13,c:'#198754',l:'Mükem. (%13)'},{v:17,c:'#0d6efd',l:'İyi (%17)'},{v:24,c:'#ffc107',l:'Ort. (%24)'}];
+{% else %}
+const navyRefs = [{v:20,c:'#198754',l:'Mükem. (%20)'},{v:24,c:'#0d6efd',l:'İyi (%24)'},{v:31,c:'#ffc107',l:'Ort. (%31)'}];
+{% endif %}
+
+new Chart(document.getElementById('navyChart'), {
+    type: 'line',
+    data: {
+        labels: navyLabels,
+        datasets: [
+            { label:'Yağ %', data:navyData, borderColor:'#dc3545', backgroundColor:'rgba(220,53,69,.1)',
+              tension:0.3, fill:true, spanGaps:true, pointRadius:3 },
+            ...navyRefs.map(r => ({ label:r.l, data:navyLabels.map(()=>r.v),
+              borderColor:r.c, borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false }))
+        ]
+    },
+    options: {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, font:{size:10} } } },
+        scales:{ y:{ title:{ display:true, text:'%' }, min:0 } }
+    }
+});
+{% endif %}
 
 // Vücut bölgesi grafiği
 new Chart(document.getElementById('bodyChart'), {
