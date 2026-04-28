@@ -31,6 +31,511 @@
     </div>
 </div>
 
+<!-- Etap Rehberi -->
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between" style="cursor:pointer"
+         data-bs-toggle="collapse" data-bs-target="#etapRehberi">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-journal-text me-2 text-primary"></i>Diyet Programı – Etap Rehberi</h6>
+        <i class="bi bi-chevron-down" id="rehberChevron"></i>
+    </div>
+    <div class="collapse" id="etapRehberi">
+        <div class="card-body p-0">
+
+            <!-- Tab başlıkları -->
+            <ul class="nav nav-tabs px-3 pt-3" id="etapTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#etap1">
+                        <span class="badge me-1" style="background:#e76f51">1</span>Saf Protein
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#etap2">
+                        <span class="badge me-1" style="background:#2d6a4f">2</span>Protein + Çiğ Sebze
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#etap3">
+                        <span class="badge me-1" style="background:#0096c7">3</span>+ Pişmiş Sebze
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#etap4">
+                        <span class="badge me-1" style="background:#6c5ce7">4</span>Çalma + Saf Protein
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#etapFree">
+                        <span class="badge bg-warning text-dark me-1">🎉</span>Serbest Gün
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#etapGenel">
+                        <span class="badge bg-secondary me-1"><i class="bi bi-info"></i></span>Genel Kurallar
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3">
+
+                <!-- ── ETAP 1 ── -->
+                <div class="tab-pane fade show active" id="etap1">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-clock-fill fs-5"></i>
+                                <div><strong>Süre: 4 gün</strong> — Döngünün en kısıtlı etabı. Vücut yağ yakmaya geçiş yapar.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-success"><i class="bi bi-check-circle me-2"></i>YENEBİLECEKLER</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="fw-semibold mb-1">🍗 Beyaz Et</p>
+                                    <ul class="mb-3 small">
+                                        <li>Tavuk, tavuk ciğer</li>
+                                        <li>Hindi eti, hindi boyun, hindi ciğer, hindi füme</li>
+                                    </ul>
+                                    <p class="fw-semibold mb-1">🐟 Deniz Ürünleri</p>
+                                    <ul class="mb-3 small">
+                                        <li>Taze balık (her türlü)</li>
+                                        <li>Dardanel ton balığı</li>
+                                    </ul>
+                                    <p class="fw-semibold mb-1">🥩 Kırmızı Et & İşlenmiş Et</p>
+                                    <ul class="mb-3 small">
+                                        <li>Kırmızı et (ızgara/haşlama)</li>
+                                        <li>Adana döner <strong>(ekmeksiz)</strong></li>
+                                        <li>Köfte <strong>(ekmeksiz, unsuz)</strong></li>
+                                        <li>Pastırma, sucuk, kavurma</li>
+                                    </ul>
+                                    <p class="fw-semibold mb-1">🥚 Diğer</p>
+                                    <ul class="mb-2 small">
+                                        <li>Yumurta — her öğünde, haşlanmış tercih edilir</li>
+                                        <li>Mantar</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-danger h-100 mb-3">
+                                <div class="card-header bg-danger bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>YASAKLAR</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Her türlü sebze (mantar hariç)</li>
+                                        <li>Ekmek, tahıl, pirinç, makarna</li>
+                                        <li>Meyve</li>
+                                        <li>Süt ürünleri (yoğurt hariç — aşağıya bak)</li>
+                                        <li>Kızartma</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card border-info">
+                                <div class="card-header bg-info bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-info"><i class="bi bi-lightbulb me-2"></i>ÖĞÜN DÜZENİ</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <p class="fw-semibold mb-1">☀️ Sabah</p>
+                                    <p class="mb-2">Küçük kase yoğurt + 1 kaşık Vitalif yulaf ezmesi</p>
+                                    <p class="fw-semibold mb-1">🌤️ Öğle & 🌙 Akşam</p>
+                                    <ul class="mb-2">
+                                        <li>Et/balık/tavuk (ızgara tercih)</li>
+                                        <li>Küçük kase yoğurt</li>
+                                        <li>Bir kase mercimek <strong>veya</strong> sebze çorbası<br><small class="text-muted">(unsuz — patates/havuç yasak)</small></li>
+                                    </ul>
+                                    <p class="fw-semibold mb-1">🍳 Pişirme</p>
+                                    <p class="mb-0">Izgara tercih edilir. Tavada az yağ ile de yapılabilir.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /etap1 -->
+
+                <!-- ── ETAP 2 ── -->
+                <div class="tab-pane fade" id="etap2">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-clock-fill fs-5"></i>
+                                <div><strong>Süre: 5 gün</strong> — 1. Etap'ın tamamı geçerli, üzerine çiğ sebzeler ekleniyor.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-success"><i class="bi bi-plus-circle me-2"></i>EKLENEN ÇİĞ SEBZELER</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <ul class="mb-0">
+                                                <li>Roka</li>
+                                                <li>Tere</li>
+                                                <li>Nane</li>
+                                                <li>Maydanoz</li>
+                                                <li>Salatalık</li>
+                                                <li>Turp</li>
+                                                <li>Biber</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-6">
+                                            <ul class="mb-0">
+                                                <li>Semizotu</li>
+                                                <li>Kereviz</li>
+                                                <li>Yeşil soğan</li>
+                                                <li>Kıvırcık</li>
+                                                <li>Marul</li>
+                                                <li>Az domates</li>
+                                                <li>Avokado</li>
+                                                <li>Mor & beyaz lahana</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-danger mb-3">
+                                <div class="card-header bg-danger bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>YASAKLAR (Ek)</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li><strong>Havuç</strong></li>
+                                        <li><strong>Dereotu</strong></li>
+                                        <li>1. Etap yasaklarının tamamı</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card border-info">
+                                <div class="card-header bg-info bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-info"><i class="bi bi-lightbulb me-2"></i>SALATA ÖNERİSİ</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Öğle/akşam yoğurdu → <strong>cacık</strong> yapılabilir</li>
+                                        <li>Salata: bol yeşillik + <strong>bol zeytinyağı</strong> + az domates</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /etap2 -->
+
+                <!-- ── ETAP 3 ── -->
+                <div class="tab-pane fade" id="etap3">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-primary d-flex align-items-center gap-2 mb-3">
+                                <i class="bi bi-clock-fill fs-5"></i>
+                                <div><strong>Süre: 5 gün</strong> — 1. ve 2. Etap'ın tamamı geçerli, üzerine kahvaltı ve pişmiş sebzeler ekleniyor.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-success"><i class="bi bi-plus-circle me-2"></i>KAHVALTIYA EKLENENLER</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Peynir (her çeşit)</li>
+                                        <li>Zeytin (yeşil & siyah)</li>
+                                        <li>3 ceviz</li>
+                                        <li>7 badem</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-success h-100">
+                                <div class="card-header bg-success bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-success"><i class="bi bi-plus-circle me-2"></i>PİŞMİŞ SEBZELER (Öğle & Akşam)</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Kabak</li>
+                                        <li>Patlıcan</li>
+                                        <li>Biber</li>
+                                        <li>Yeşil fasulye</li>
+                                        <li>Bamya</li>
+                                        <li>Enginar</li>
+                                    </ul>
+                                    <p class="mt-2 mb-0 text-muted">Buharda pişmiş tercih edilir.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-danger mb-3">
+                                <div class="card-header bg-danger bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-x-circle me-2"></i>YASAKLAR</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li><strong>Patates</strong></li>
+                                        <li><strong>Havuç</strong></li>
+                                        <li><strong>Bezelye</strong></li>
+                                        <li><strong>Kızartmanın her türü</strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart me-2"></i>ÖĞÜN ORANI</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <span class="badge" style="background:#e76f51">%40 Et</span>
+                                        <span class="badge" style="background:#2d6a4f">%30 Salata</span>
+                                        <span class="badge" style="background:#0096c7">%30 Tencere</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /etap3 -->
+
+                <!-- ── ETAP 4 ── -->
+                <div class="tab-pane fade" id="etap4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="alert alert-purple d-flex align-items-center gap-2 mb-3" style="background:#f3f0ff;border-color:#6c5ce7;color:#3d2d8e">
+                                <i class="bi bi-clock-fill fs-5"></i>
+                                <div>
+                                    <strong>Süre: 7 gün (1 hafta)</strong> —
+                                    <strong>4 Çalma Günü + 3 Saf Protein Günü</strong>
+                                    <br><small>Sıra: Çalma → Saf Protein → Çalma → Saf Protein (birer gün arayla dönüşümlü)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Çalma Günleri -->
+                        <div class="col-md-7">
+                            <div class="card border-purple h-100" style="border-color:#6c5ce7!important">
+                                <div class="card-header" style="background:rgba(108,92,231,.1)">
+                                    <h6 class="mb-0 fw-bold" style="color:#6c5ce7"><i class="bi bi-star-fill me-2"></i>ÇALMA GÜNLERİ (4 gün)</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <p class="fw-bold text-muted mb-2">☀️ KAHVALTI</p>
+                                    <ul class="mb-3">
+                                        <li>3 kuru kayısı</li>
+                                        <li>Yulaf ezmeli yoğurt</li>
+                                        <li>Bir küçük meyve</li>
+                                        <li>İnce bir dilim ekmek</li>
+                                        <li>Yumurta, pastırma, sucuk, zeytin, peynir, yeşillikler</li>
+                                    </ul>
+
+                                    <p class="fw-bold text-muted mb-2">🌤️ ÖĞLE</p>
+                                    <ul class="mb-3">
+                                        <li>3 kaşık bakliyat</li>
+                                        <li>3 kaşık bulgur <strong>veya</strong> pirinç pilavı</li>
+                                        <li class="text-muted">— VEYA —</li>
+                                        <li>Küçük meyve / fındıklı lahmacun / küçük ekmek / 3 saçma / küçük dolma</li>
+                                        <li>Küçük kase yoğurt</li>
+                                        <li>Bol yeşillikli zeytinyağlı salata</li>
+                                    </ul>
+
+                                    <p class="fw-bold text-muted mb-2">🌙 AKŞAM</p>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <span class="badge" style="background:#e76f51">%40 Protein</span>
+                                        <span class="badge" style="background:#2d6a4f">%30 Salata</span>
+                                        <span class="badge" style="background:#0096c7">%30 Yoğurt/Cacık</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Saf Protein Günleri -->
+                        <div class="col-md-5">
+                            <div class="card border-warning h-100">
+                                <div class="card-header bg-warning bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-warning"><i class="bi bi-shield-fill me-2"></i>SAF PROTEİN GÜNLERİ (3 gün)</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <p class="mb-2">1. Etap menüsü uygulanır.</p>
+                                    <div class="alert alert-warning p-2 mb-0" style="font-size:.8rem">
+                                        <i class="bi bi-arrow-right me-1"></i>1. Etap sekmesindeki tüm kurallar geçerlidir.
+                                    </div>
+                                    <hr>
+                                    <p class="fw-semibold mb-1">Örnek Hafta Düzeni:</p>
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <tbody>
+                                            <tr><td>Pzt</td><td><span class="badge" style="background:#6c5ce7">Çalma</span></td></tr>
+                                            <tr><td>Sal</td><td><span class="badge" style="background:#e76f51">Saf Protein</span></td></tr>
+                                            <tr><td>Çar</td><td><span class="badge" style="background:#6c5ce7">Çalma</span></td></tr>
+                                            <tr><td>Per</td><td><span class="badge" style="background:#e76f51">Saf Protein</span></td></tr>
+                                            <tr><td>Cum</td><td><span class="badge" style="background:#6c5ce7">Çalma</span></td></tr>
+                                            <tr><td>Cmt</td><td><span class="badge" style="background:#e76f51">Saf Protein</span></td></tr>
+                                            <tr><td>Paz</td><td><span class="badge" style="background:#6c5ce7">Çalma</span></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /etap4 -->
+
+                <!-- ── SERBEST GÜN ── -->
+                <div class="tab-pane fade" id="etapFree">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card border-warning text-center">
+                                <div class="card-body py-4">
+                                    <div class="display-3 mb-3">🎉</div>
+                                    <h5 class="fw-bold text-warning">SERBEST GÜN!</h5>
+                                    <p class="text-muted">Bu gün istediğinizi yiyebilirsiniz.</p>
+                                    <hr>
+                                    <div class="alert alert-info mb-0">
+                                        <i class="bi bi-arrow-right-circle me-2"></i>
+                                        <strong>Yarın 1. Etap'tan tekrar başlıyorsunuz.</strong>
+                                        <br><small>Bir döngü daha tamamlandı!</small>
+                                    </div>
+                                    <hr>
+                                    <div class="text-start small text-muted">
+                                        <p class="fw-semibold mb-1">Döngü Sırası:</p>
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            <span class="badge" style="background:#e76f51">1. Etap (4g)</span>
+                                            <span class="text-muted">→</span>
+                                            <span class="badge" style="background:#2d6a4f">2. Etap (5g)</span>
+                                            <span class="text-muted">→</span>
+                                            <span class="badge" style="background:#0096c7">3. Etap (5g)</span>
+                                            <span class="text-muted">→</span>
+                                            <span class="badge" style="background:#6c5ce7">4. Etap (7g)</span>
+                                            <span class="text-muted">→</span>
+                                            <span class="badge bg-warning text-dark">Serbest (1g)</span>
+                                            <span class="text-muted">→ 🔁</span>
+                                        </div>
+                                        <p class="mt-2 mb-0 text-muted">Toplam döngü süresi: <strong>22 gün</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /etapFree -->
+
+                <!-- ── GENEL KURALLAR ── -->
+                <div class="tab-pane fade" id="etapGenel">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-droplet-fill me-2 text-info"></i>Sıvı Tüketimi</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Günde en az <strong>2–3 litre su</strong></li>
+                                        <li>Şekersiz çay (ıhlamur, papatya, yeşil çay)</li>
+                                        <li>Sade Türk çayı (az)</li>
+                                        <li>Sade kahve (şekersiz)</li>
+                                        <li class="text-danger">❌ Meyve suyu, gazlı içecek, alkol</li>
+                                        <li class="text-danger">❌ Şekerli içecekler</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock me-2 text-warning"></i>Öğün Zamanlaması</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Sabah kahvaltısı mutlaka yapılmalı</li>
+                                        <li>Öğünler arası <strong>4–5 saat</strong> bırakılmalı</li>
+                                        <li>Gece 21:00 sonrası yemek önerilmez</li>
+                                        <li>Ara öğün <strong>yasak</strong> (acıkılırsa su içilmeli)</li>
+                                        <li>Ölçümler sabah aç karnına yapılmalı</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-activity me-2 text-danger"></i>Egzersiz</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>1. ve 2. Etaplarda yoğun egzersiz <strong>önerilmez</strong></li>
+                                        <li>3. ve 4. Etaplarda orta yoğunlukta yürüyüş uygun</li>
+                                        <li>Günde 30 dk yürüyüş idealdir</li>
+                                        <li>Ağır kaldırma etaplara göre değerlendirilmeli</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-rulers me-2 text-success"></i>Ölçüm Zamanı</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>Sabah aç karnına, tuvaletten sonra</li>
+                                        <li>Aynı kıyafetle ya da iç çamaşırıyla</li>
+                                        <li>Aynı terazi / mezura ile</li>
+                                        <li>Her etap değişiminde mutlaka alınmalı</li>
+                                        <li>Haftada 1 kez tavsiye edilir</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-fire me-2 text-orange"></i>Pişirme Yöntemleri</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>✅ Izgara (en ideal)</li>
+                                        <li>✅ Haşlama</li>
+                                        <li>✅ Buharda pişirme</li>
+                                        <li>✅ Az yağlı tavada</li>
+                                        <li>✅ Fırında (yağsız)</li>
+                                        <li>❌ Kızartma (tüm etaplarda yasak)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Genel Yasaklar</h6>
+                                </div>
+                                <div class="card-body small">
+                                    <ul class="mb-0">
+                                        <li>❌ Şeker ve tatlılar (serbest gün hariç)</li>
+                                        <li>❌ Ekmek ve tahıllar (4. etap hariç)</li>
+                                        <li>❌ Her türlü kızartma</li>
+                                        <li>❌ Hazır gıdalar ve fast food</li>
+                                        <li>❌ Meyve (3. etap dahil, 4. etap kahvaltı hariç)</li>
+                                        <li>❌ Patates ve havuç (tüm etaplar)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /row genel -->
+                </div><!-- /etapGenel -->
+
+            </div><!-- /tab-content -->
+        </div><!-- /card-body -->
+    </div><!-- /collapse -->
+</div><!-- /etap rehberi card -->
+
 <!-- Patients Table -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -133,6 +638,14 @@
 
 {% block extra_js %}
 <script>
+// Etap rehberi chevron
+const rehberEl = document.getElementById('etapRehberi');
+const chevron  = document.getElementById('rehberChevron');
+if (rehberEl) {
+    rehberEl.addEventListener('show.bs.collapse',  () => chevron.classList.replace('bi-chevron-down','bi-chevron-up'));
+    rehberEl.addEventListener('hide.bs.collapse',  () => chevron.classList.replace('bi-chevron-up','bi-chevron-down'));
+}
+
 document.getElementById('searchInput').addEventListener('input', function() {
     const val = this.value.toLowerCase();
     document.querySelectorAll('#patientsTable tbody tr').forEach(row => {
