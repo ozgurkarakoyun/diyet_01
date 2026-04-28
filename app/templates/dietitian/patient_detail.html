@@ -588,6 +588,8 @@
 const patientId = {{ patient.id }};
 const aiAssistUrl = "{{ url_for('dietitian.ai_assist', patient_id=patient.id) }}";
 const updateNotesUrl = "{{ url_for('dietitian.update_patient_notes', patient_id=patient.id) }}";
+console.log('AI URL:', aiAssistUrl);
+console.log('Notes URL:', updateNotesUrl);
 
 function askAI(question) {
     document.getElementById('aiQuestion').value = question;
@@ -606,7 +608,8 @@ async function sendAIQuestion() {
     try {
         const res = await fetch(aiAssistUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({ question: q })
         });
         const data = await res.json();
@@ -638,7 +641,8 @@ async function saveNotes() {
     try {
         const res = await fetch(updateNotesUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({ notes })
         });
         const data = await res.json();
