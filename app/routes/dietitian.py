@@ -321,6 +321,101 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
     db.session.add(new_history)
 
 
+@dietitian_bp.route('/patient/<int:patient_id>/ai-assist', methods=['POST'])
+@login_required
+def ai_assist(patient_id):
+    """Hasta verileri üzerinden AI yardımı — Anthropic API çağrısı."""
+    import os, requests as req
+    dietitian = get_current_dietitian()
+    patient = get_patient_or_404(patient_id, dietitian)
+
+    data = request.get_json()
+    user_question = (data or {}).get('question', '').strip()
+    if not user_question:
+        return jsonify({'error': 'Soru boş olamaz.'}), 400
+
+    # Hasta özeti oluştur
+    last_m = patient.get_last_measurement()
+    bmi_str = ''
+    if last_m and last_m.weight and patient.height_cm:
+        bmi = round(last_m.weight / ((patient.height_cm / 100) ** 2), 1)
+        bmi_str = f', BKİ={bmi}'
+
+    stage_name = patient.current_stage.name if patient.current_stage else 'Etap atanmamış'
+    stage_day  = patient.get_days_in_current_stage()
+
+    patient_summary = (
+        f"Hasta: {patient.nickname}, "
+        f"Cinsiyet: {'Kadın' if patient.gender=='female' else 'Erkek' if patient.gender=='male' else '?'}, "
+        f"Boy: {patient.height_cm or '?'} cm, "
+        f"Başlangıç kilosu: {patient.start_weight or '?'} kg"
+        f"{bmi_str}, "
+        f"Aktif etap: {stage_name} ({stage_day}. gün), "
+        f"Döngü: {patient.cycle_number}"
+    )
+    if last_m:
+        patient_summary += (
+            f"\nSon ölçüm ({last_m.date}): "
+            f"kilo={last_m.weight}, göbek={last_m.gobek}, "
+            f"bel={last_m.bel}, kalça={last_m.kalca}"
+        )
+    if patient.notes:
+        patient_summary += f"\nHasta notları: {patient.notes}"
+
+    system_prompt = """Sen deneyimli bir diyetisyenin asistanısın. 
+Aşağıdaki diyet programı kurallarına hakimsin:
+
+PROGRAM KURALLARI:
+- 1.Etap (4 gün): Saf protein - tavuk, hindi, balık, kırmızı et, yumurta, mantar. Sabah yoğurt+vitalif yulaf ezmesi, öğle/akşam küçük kase yoğurt + unsuz çorba.
+- 2.Etap (5 gün): 1.etap + çiğ sebzeler (roka,tere,nane,maydanoz,salatalık,turp,biber,semizotu,kereviz,yeşil soğan,kıvırcık,marul,az domates,avokado,mor/beyaz lahana). Havuç ve dereotu yasak.
+- 3.Etap (5 gün): 1+2.etap + kahvaltıya peynir/zeytin/3ceviz/7badem + öğle/akşama pişmiş sebze (kabak,patlıcan,biber,yeşil fasulye,bamya,enginar). %40 et %30 salata %30 tencere. Öğle/akşam unsuz sebze veya mercimek çorbası (sırayla).
+- 4.Etap (7 gün): 4 çalma + 3 saf protein, dönüşümlü. Çalma kahvaltı: 3 kuru kayısı + yulaf ezmeli yoğurt + küçük meyve + ince ekmek + yumurta/pastırma/sucuk/zeytin/peynir.
+- Serbest Gün (1 gün): 21 günlük programın sonunda. Abartma, her şeyden az az.
+- Genel: Öğünler arası en az 4 saat, her 25 kg için 1 litre su, sakız yasak.
+- Kilo verme durursa: Maydanoz-limon karışımı sabah aç karnına, gün aşırı (1.etap dışında). Probiyotik yoğurt karışımı akşam öğünü (zencefil, zerdeçal, keten tohumu, tarçın, yulaf kepeği/ezmesi, kayısı, ceviz) — haftada max 2 kez.
+- Kabızlık: Gece 2 kayısı + 2 ceviz suda beklet, sabah aç karnına iç. Activize'dan 5 dk sonra tüket. Gece magnezyum.
+
+Kısa, net, pratik yanıtlar ver. Türkçe yaz. Başka hastalara veya kaynaklara referans verme. 
+Yalnızca bu program çerçevesinde önerilerde bulun."""
+
+    try:
+        api_key = os.getenv('ANTHROPIC_API_KEY', '')
+        resp = req.post(
+            'https://api.anthropic.com/v1/messages',
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            },
+            json={
+                'model': 'claude-haiku-4-5-20251001',
+                'max_tokens': 1024,
+                'system': system_prompt,
+                'messages': [
+                    {'role': 'user', 'content': f"Hasta bilgileri:\n{patient_summary}\n\nSorum: {user_question}"}
+                ]
+            },
+            timeout=30
+        )
+        resp.raise_for_status()
+        answer = resp.json()['content'][0]['text']
+        return jsonify({'answer': answer})
+    except Exception as e:
+        return jsonify({'error': f'AI yanıt alınamadı: {str(e)}'}), 500
+
+
+@dietitian_bp.route('/patient/<int:patient_id>/update-notes', methods=['POST'])
+@login_required
+def update_patient_notes(patient_id):
+    """Hasta kişisel program notlarını güncelle."""
+    dietitian = get_current_dietitian()
+    patient = get_patient_or_404(patient_id, dietitian)
+    data = request.get_json()
+    patient.notes = (data or {}).get('notes', '').strip()
+    db.session.commit()
+    return jsonify({'ok': True})
+
+
 def _auto_advance_stage(patient):
     if not patient.current_stage:
         return
