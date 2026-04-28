@@ -641,6 +641,21 @@ const generateProgramUrl = "{{ url_for('dietitian.ai_generate_program', patient_
 console.log('AI URL:', aiAssistUrl);
 console.log('Notes URL:', updateNotesUrl);
 
+// CSRF token helper
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+function apiFetch(url, body) {
+    return fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(body)
+    });
+}
+
 // ── AI Yardımı ────────────────────────────────────────────────────────────────
 function askAI(question) {
     document.getElementById('aiQuestion').value = question;
@@ -655,12 +670,7 @@ async function sendAIQuestion() {
     document.getElementById('aiThinking').style.display = 'block';
     document.getElementById('aiSendBtn').disabled = true;
     try {
-        const res = await fetch(aiAssistUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ question: q })
-        });
+        const res = await apiFetch(aiAssistUrl, { question: q });
         const data = await res.json();
         document.getElementById('aiThinking').style.display = 'none';
         if (data.answer) {
@@ -688,12 +698,7 @@ async function saveInternalNotes() {
     const status = document.getElementById('internalNoteStatus');
     status.textContent = 'Kaydediliyor...';
     try {
-        const res = await fetch(updateNotesUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ notes })
-        });
+        const res = await apiFetch(updateNotesUrl, { notes });
         const data = await res.json();
         status.textContent = data.ok ? '✅ Kaydedildi' : '❌ Hata';
         setTimeout(() => status.textContent = '', 3000);
@@ -705,12 +710,7 @@ async function savePersonalProgram() {
     const status = document.getElementById('programSaveStatus');
     status.textContent = 'Yayınlanıyor...';
     try {
-        const res = await fetch(updateNotesUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ personal_program })
-        });
+        const res = await apiFetch(updateNotesUrl, { personal_program });
         const data = await res.json();
         status.textContent = data.ok ? '✅ Hastaya yayınlandı!' : '❌ Hata';
         setTimeout(() => status.textContent = '', 4000);
@@ -723,12 +723,7 @@ async function generateProgram() {
     document.getElementById('generateThinking').style.display = 'flex';
     document.getElementById('programPreview').style.display = 'none';
     try {
-        const res = await fetch(generateProgramUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ instructions })
-        });
+        const res = await apiFetch(generateProgramUrl, { instructions });
         const data = await res.json();
         if (data.program) {
             document.getElementById('programPreviewContent').textContent = data.program;
