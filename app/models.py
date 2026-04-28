@@ -112,7 +112,8 @@ class Patient(db.Model):
     gender = db.Column(db.String(10))
     height_cm = db.Column(db.Float)
     start_weight = db.Column(db.Float)
-    notes = db.Column(db.Text)
+    notes = db.Column(db.Text)            # Diyetisyen iç notları (hasta görmez)
+    personal_program = db.Column(db.Text)  # Hasta tarafına yansıyan kişisel program
     is_active = db.Column(db.Boolean, default=True)
 
     # Current stage tracking
