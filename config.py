@@ -30,6 +30,12 @@ class Config:
     # WTF
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600
+    WTF_CSRF_HEADERS = ['X-CSRFToken', 'X-CSRF-Token']
+    WTF_CSRF_EXEMPT_LIST = [
+        'app.routes.dietitian.update_patient_notes',
+        'app.routes.dietitian.ai_assist',
+        'app.routes.dietitian.ai_generate_program',
+    ]
 
     # App settings
     POSTS_PER_PAGE = 20
