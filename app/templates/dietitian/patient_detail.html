@@ -602,7 +602,7 @@ async function sendAIQuestion() {
     document.getElementById('aiSendBtn').disabled = true;
 
     try {
-        const res = await fetch(`/patient/${patientId}/ai-assist`, {
+        const res = await fetch(`/dietitian/patient/${patientId}/ai-assist`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ question: q })
@@ -634,7 +634,7 @@ async function saveNotes() {
     const status = document.getElementById('notesSaveStatus');
     status.textContent = 'Kaydediliyor...';
     try {
-        const res = await fetch(`/patient/${patientId}/update-notes`, {
+        const res = await fetch(`/dietitian/patient/${patientId}/update-notes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notes })
