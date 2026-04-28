@@ -13,6 +13,11 @@
 .measure-table td { font-size:.82rem; }
 .chart-container { position:relative; height:260px; }
 .tab-nav .nav-link { font-size:.85rem; padding:.4rem .8rem; }
+.ai-bubble { background:#f0f4ff; border-left:3px solid #0d6efd; border-radius:6px; padding:12px 14px; font-size:.88rem; white-space:pre-wrap; line-height:1.6; }
+.ai-thinking { display:inline-block; width:8px; height:8px; border-radius:50%; background:#0d6efd; animation:ai-blink 1s infinite; }
+.ai-thinking:nth-child(2){ animation-delay:.2s; } .ai-thinking:nth-child(3){ animation-delay:.4s; }
+@keyframes ai-blink { 0%,100%{opacity:.2} 50%{opacity:1} }
+.personal-notes-area { font-size:.85rem; border:2px dashed #dee2e6; border-radius:8px; padding:10px; min-height:80px; }
 .navy-ref { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.75rem; font-weight:600; }
 .navy-excellent { background:#d1e7dd; color:#0a3622; }
 .navy-good      { background:#cfe2ff; color:#084298; }
@@ -212,6 +217,8 @@
         <ul class="nav nav-tabs tab-nav mb-3" id="detailTabs">
             <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-grafik"><i class="bi bi-graph-up me-1"></i>Grafik</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-olcumler"><i class="bi bi-rulers me-1"></i>Tüm Ölçümler</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-program"><i class="bi bi-pencil-square me-1"></i>Kişisel Program</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-ai"><i class="bi bi-robot me-1"></i>AI Yardımı</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-mesajlar"><i class="bi bi-chat-dots me-1"></i>Mesajlar</a></li>
         </ul>
 
@@ -417,6 +424,120 @@
                 </div>
             </div><!-- /tab-olcumler -->
 
+            <!-- TAB: KİŞİSEL PROGRAM -->
+            <div class="tab-pane fade" id="tab-program">
+                <div class="card mb-3">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2 text-warning"></i>Kişiye Özel Program Notları</h6>
+                        <span class="badge bg-warning text-dark ms-auto">Sadece diyetisyen görür</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-2">
+                            Bu hastaya özel program değişiklikleri, istisnalar ve notları buraya yazın.
+                            Hasta bu notları göremez. AI yardımı da bu notları dikkate alır.
+                        </p>
+                        <textarea id="personalNotesArea" class="form-control personal-notes-area mb-2"
+                                  rows="6" placeholder="Örnek: Hasta laktozu kesiyor, 1. etapta yoğurt çıkarıldı. Kabızlık protokolü uygulanıyor. Serbest günde bakliyat kısıtlandı...">{{ patient.notes or '' }}</textarea>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-warning btn-sm" onclick="saveNotes()">
+                                <i class="bi bi-floppy me-1"></i>Kaydet
+                            </button>
+                            <span id="notesSaveStatus" class="text-muted small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hızlı Değişiklik Şablonları -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-lightning me-2 text-info"></i>Hızlı Şablonlar</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Tıklayarak nota ekleyin:</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('⚠️ Kabızlık protokolü uygulanıyor (gece kayısı-ceviz, magnezyum).')">💊 Kabızlık Protokolü</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🥛 Laktoz intoleransı: yoğurt çıkarıldı, yerine zeytinyağlı salata.')">🥛 Laktoz İntoleransı</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('⚖️ Kilo verme durdu — maydanoz-limon karışımı başlandı (gün aşırı).')">⚖️ Kilo Durması</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🌙 Ramazan programına alındı (4 günlük üç aylar planı).')">🌙 Ramazan Programı</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🚫 Kırmızı et kısıtlandı — dini/kişisel tercih.')">🚫 Kırmızı Et Kısıtı</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🐟 Balık alerjisi: deniz ürünleri menüden çıkarıldı.')">🐟 Balık Alerjisi</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🥚 Yumurta alerjisi: yumurta menüden çıkarıldı.')">🥚 Yumurta Alerjisi</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('🏃 Yoğun egzersiz yapıyor: 3. etaptan itibaren protein miktarı artırıldı.')">🏃 Egzersiz Artışı</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('👩‍⚕️ Tiroid hastası — iyotlu tuz kullanımı dikkatli olunacak.')">👩‍⚕️ Tiroid Hastası</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="addNote('💉 Diyabet: şeker içeren gıdalar ve meyve sıkı kontrol altında.')">💉 Diyabet</button>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /tab-program -->
+
+            <!-- TAB: AI YARDIMI -->
+            <div class="tab-pane fade" id="tab-ai">
+                <div class="card mb-3">
+                    <div class="card-header d-flex align-items-center gap-2">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-robot me-2 text-primary"></i>AI Diyetisyen Asistanı</h6>
+                        <span class="badge bg-primary ms-auto">Claude AI</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Bu hastanın verilerini bilen AI asistanına soru sorun.
+                            Program kuralları, kişisel notlar ve son ölçüm verileri AI'ya aktarılır.
+                        </p>
+
+                        <!-- Hızlı Sorular -->
+                        <div class="mb-3">
+                            <p class="fw-semibold small mb-2">⚡ Hızlı Sorular:</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Bu hastanın mevcut etabında neler yiyebileceğini özetle.')">Etap özeti</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Bu hastanın ölçümlerine bakarak ilerleme hakkında ne söylersin?')">İlerleme değerlendirmesi</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Kilo verme durdu, ne yapmalıyım?')">Kilo durdu ne yapayım</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Bu hasta için serbest gün önerileri neler olmalı?')">Serbest gün önerileri</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Hastanın kabızlık şikayeti var, protokolü hatırlat.')">Kabızlık protokolü</button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="askAI('Bu hastanın etabını değiştirmem gerekiyor mu? Değerlendirme yap.')">Etap değişimi gerekli mi</button>
+                            </div>
+                        </div>
+
+                        <!-- Soru Girişi -->
+                        <div class="input-group mb-3">
+                            <textarea id="aiQuestion" class="form-control" rows="2"
+                                      placeholder="Hastaya özel soru sorun... (örn: 'İftarda ne yiyebilir?', 'Bu ölçüm değerleri normal mi?')"></textarea>
+                            <button class="btn btn-primary" onclick="sendAIQuestion()" id="aiSendBtn">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+
+                        <!-- AI Yanıt Alanı -->
+                        <div id="aiResponseArea" style="display:none">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-robot text-primary"></i>
+                                <span class="fw-semibold small">AI Yanıtı</span>
+                            </div>
+                            <div id="aiResponseContent" class="ai-bubble"></div>
+                        </div>
+                        <div id="aiThinking" style="display:none" class="text-center py-3">
+                            <span class="ai-thinking"></span>
+                            <span class="ai-thinking"></span>
+                            <span class="ai-thinking"></span>
+                            <span class="text-muted small ms-2">Düşünüyor...</span>
+                        </div>
+                        <div id="aiError" style="display:none" class="alert alert-danger small mb-0"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header"><h6 class="mb-0 fw-bold small text-muted"><i class="bi bi-info-circle me-2"></i>AI Ne Biliyor?</h6></div>
+                    <div class="card-body small text-muted">
+                        AI asistanına şu bilgiler aktarılır:
+                        <ul class="mb-0 mt-1">
+                            <li>Hastanın adı, cinsiyeti, boyu, başlangıç kilosu</li>
+                            <li>Aktif etap ve kaçıncı günde olduğu</li>
+                            <li>Son ölçüm değerleri (kilo, göbek, bel, kalça)</li>
+                            <li>Kişisel program notları (Kişisel Program sekmesinden)</li>
+                            <li>Tüm program kuralları (etaplar, yasaklar, protokoller)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div><!-- /tab-ai -->
+
             <!-- TAB: MESAJLAR -->
             <div class="tab-pane fade" id="tab-mesajlar">
                 <div class="card">
@@ -463,6 +584,76 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// ── AI Yardımı ────────────────────────────────────────────────────────────────
+const patientId = {{ patient.id }};
+
+function askAI(question) {
+    document.getElementById('aiQuestion').value = question;
+    sendAIQuestion();
+}
+
+async function sendAIQuestion() {
+    const q = document.getElementById('aiQuestion').value.trim();
+    if (!q) return;
+
+    document.getElementById('aiResponseArea').style.display = 'none';
+    document.getElementById('aiError').style.display = 'none';
+    document.getElementById('aiThinking').style.display = 'block';
+    document.getElementById('aiSendBtn').disabled = true;
+
+    try {
+        const res = await fetch(`/patient/${patientId}/ai-assist`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: q })
+        });
+        const data = await res.json();
+        document.getElementById('aiThinking').style.display = 'none';
+        if (data.answer) {
+            document.getElementById('aiResponseContent').textContent = data.answer;
+            document.getElementById('aiResponseArea').style.display = 'block';
+        } else {
+            document.getElementById('aiError').textContent = data.error || 'Yanıt alınamadı.';
+            document.getElementById('aiError').style.display = 'block';
+        }
+    } catch(e) {
+        document.getElementById('aiThinking').style.display = 'none';
+        document.getElementById('aiError').textContent = 'Bağlantı hatası: ' + e.message;
+        document.getElementById('aiError').style.display = 'block';
+    }
+    document.getElementById('aiSendBtn').disabled = false;
+}
+
+document.getElementById('aiQuestion')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) sendAIQuestion();
+});
+
+// ── Kişisel Notlar ────────────────────────────────────────────────────────────
+async function saveNotes() {
+    const notes = document.getElementById('personalNotesArea').value;
+    const status = document.getElementById('notesSaveStatus');
+    status.textContent = 'Kaydediliyor...';
+    try {
+        const res = await fetch(`/patient/${patientId}/update-notes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notes })
+        });
+        const data = await res.json();
+        status.textContent = data.ok ? '✅ Kaydedildi' : '❌ Hata';
+        setTimeout(() => status.textContent = '', 3000);
+    } catch(e) {
+        status.textContent = '❌ Bağlantı hatası';
+    }
+}
+
+function addNote(text) {
+    const area = document.getElementById('personalNotesArea');
+    const existing = area.value.trim();
+    area.value = existing ? existing + '\n' + text : text;
+    area.focus();
+}
+
 // Mesaj scroll
 const mc = document.getElementById('msgContainer');
 if (mc) mc.scrollTop = mc.scrollHeight;
