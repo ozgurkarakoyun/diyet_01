@@ -2,53 +2,101 @@
 {% block title %}Panelim – DiyetTakip{% endblock %}
 {% block page_title %}Ana Sayfa{% endblock %}
 
+{% block extra_css %}
+<style>
+.stage-progress-wrap { border-radius:16px; overflow:hidden; }
+.navy-mini { background:#f0f4ff; border-radius:10px; padding:10px 14px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row g-3 mb-4">
-    <!-- Current Stage Card -->
-    <div class="col-12">
-        {% if patient.current_stage %}
-        <div class="card border-0" style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%); color:#fff;">
-            <div class="card-body p-3 p-md-4">
-                <div class="row align-items-center">
-                    <div class="col-md-7">
-                        <p class="mb-1 opacity-75 small"><i class="bi bi-layers me-1"></i>AKTİF ETAP</p>
-                        {% if patient.current_stage.is_free_day %}
-                        <h3 class="fw-bold mb-1">🎉 Serbest Gün!</h3>
-                        <p class="mb-0 opacity-85">Bugün serbest gününüz. Yarın 1. Etap başlıyor.</p>
-                        {% else %}
-                        <h3 class="fw-bold mb-1">{{ patient.current_stage.stage_number }}. Etap – {{ patient.current_stage.name }}</h3>
-                        <p class="mb-0 opacity-85">{{ patient.current_stage.duration_days }} günlük etap</p>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-5 text-md-end mt-2 mt-md-0">
-                        {% if not patient.current_stage.is_free_day %}
-                        <div class="d-inline-block text-center">
-                            <div style="font-size:2.5rem; font-weight:700;">{{ days_in_stage }}</div>
-                            <small class="opacity-75">. gün</small>
-                            {% if days_remaining > 0 %}
-                            <div class="mt-1">
-                                <small class="opacity-75">{{ days_remaining }} gün kaldı</small>
-                                <div class="progress mt-1" style="height:6px; background:rgba(255,255,255,0.2);">
-                                    <div class="progress-bar bg-white"
-                                         style="width:{{ [(days_in_stage / patient.current_stage.duration_days * 100)|int, 100]|min }}%"></div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        <div class="mt-2">
-                            <span class="badge bg-white text-success fw-bold">Döngü {{ patient.cycle_number }}</span>
-                        </div>
-                    </div>
+
+{# ── ETAP İLERLEME + US NAVY KARTI ─────────────────────────────────────────── #}
+{% if patient.current_stage %}
+{% set days_in = days_in_stage %}
+{% set total_days = patient.current_stage.duration_days if not patient.current_stage.is_free_day else 1 %}
+{% set pct = [(days_in / total_days * 100)|round|int, 100]|min %}
+{% set stage_colors = {'1':'#e76f51','2':'#2d6a4f','3':'#0096c7','4':'#6c5ce7'} %}
+{% set snum = patient.current_stage.stage_number|string %}
+{% set color = stage_colors.get(snum, '#adb5bd') %}
+
+<div class="card mb-4 border-0 shadow-sm" style="background:linear-gradient(135deg,#1b4332 0%,#40916c 100%);color:#fff;">
+    <div class="card-body p-3 p-md-4">
+
+        {# Etap başlık + döngü #}
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <p class="mb-0 opacity-75 small text-uppercase fw-semibold"><i class="bi bi-layers me-1"></i>Aktif Etap</p>
+                {% if patient.current_stage.is_free_day %}
+                <h4 class="fw-bold mb-0">🎉 Serbest Gün!</h4>
+                {% else %}
+                <h4 class="fw-bold mb-0">{{ patient.current_stage.stage_number }}. Etap – {{ patient.current_stage.name }}</h4>
+                {% endif %}
+            </div>
+            <div class="text-end">
+                <div class="fw-bold" style="font-size:2.2rem;line-height:1;">{{ days_in }}</div>
+                <small class="opacity-75">/ {{ total_days }} gün</small>
+                <div class="mt-1"><span class="badge bg-white text-success fw-bold">{{ patient.cycle_number }}. Döngü</span></div>
+            </div>
+        </div>
+
+        {# Progress bar #}
+        {% if not patient.current_stage.is_free_day %}
+        <div class="mb-2">
+            <div class="progress" style="height:14px;border-radius:7px;background:rgba(255,255,255,.2);">
+                <div class="progress-bar" style="width:{{ pct }}%;background:rgba(255,255,255,.85);border-radius:7px;">
+                    {% if pct > 15 %}<span class="small fw-bold text-success">%{{ pct }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between opacity-75" style="font-size:.75rem;">
+            <span>{{ patient.stage_start_date.strftime('%d.%m.%Y') if patient.stage_start_date }}</span>
+            <span>{% if days_remaining > 0 %}{{ days_remaining }} gün kaldı{% else %}⚠️ Süre doldu{% endif %}</span>
+        </div>
+        {% endif %}
+
+        {# Döngü zaman çizelgesi #}
+        <div class="d-flex gap-1 mt-3">
+            {% for n, c, d, lbl in [('1','#e76f51',4,'1.Etap'),('2','#2d6a4f',5,'2.Etap'),('3','#0096c7',5,'3.Etap'),('4','#6c5ce7',7,'4.Etap')] %}
+            <div style="flex:{{ d }};min-width:0;" class="text-center">
+                <div class="rounded" style="height:8px;background:{{ c }};opacity:{% if snum == n %}1{% else %}0.35{% endif %};"></div>
+                <div style="font-size:.6rem;opacity:.8;margin-top:2px;white-space:nowrap;">{{ lbl }}</div>
+            </div>
+            {% endfor %}
+            <div style="flex:1;min-width:0;" class="text-center">
+                <div class="rounded" style="height:8px;background:#ffc107;opacity:{% if patient.current_stage.is_free_day %}1{% else %}0.35{% endif %};"></div>
+                <div style="font-size:.6rem;opacity:.8;margin-top:2px;">Serbest</div>
+            </div>
+        </div>
+
+        {# US Navy #}
+        {% if patient.height_cm and patient.gender in ['male','female'] %}
+        {% set lm = last_measurement %}
+        {% if lm and lm.boyun and lm.bel and (patient.gender == 'male' or lm.kalca) %}
+        <div class="navy-mini mt-3" style="background:rgba(255,255,255,.12);">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="small fw-semibold opacity-90">🛡️ US Navy Vücut Yağ Oranı</span>
+                    <div id="navyResult" class="fw-bold fs-5">—</div>
+                    <div id="navyCategory" class="small opacity-85"></div>
+                </div>
+                <div class="text-end small opacity-75">
+                    <div>Yağ kütlesi</div>
+                    <div id="navyFatMass">—</div>
+                    <div>Yağsız kütle</div>
+                    <div id="navyLeanMass">—</div>
                 </div>
             </div>
         </div>
         {% endif %}
+        {% endif %}
+
     </div>
 </div>
+{% endif %}
 
-<div class="row g-3">
-    <!-- Quick Stats -->
+{# ── HIZLI İSTATİSTİKLER ────────────────────────────────────────────────────── #}
+<div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
         <div class="card h-100">
             <div class="card-body text-center p-3">
@@ -61,41 +109,23 @@
         </div>
     </div>
 
-    <!-- VKİ Kartı -->
     <div class="col-6 col-md-3">
         <div class="card h-100">
             <div class="card-body text-center p-3">
                 {% set cur_weight = (last_measurement.weight if last_measurement and last_measurement.weight else patient.start_weight) %}
                 {% if patient.height_cm and patient.height_cm > 0 and cur_weight %}
                   {% set bmi = (cur_weight / ((patient.height_cm / 100) ** 2)) %}
-                  {% if bmi < 18.5 %}
-                    {% set bmi_label = 'Zayıf' %}
-                    {% set bmi_color = '#0096c7' %}
-                    {% set bmi_icon  = '🔵' %}
-                  {% elif bmi < 25 %}
-                    {% set bmi_label = 'Normal' %}
-                    {% set bmi_color = '#2d6a4f' %}
-                    {% set bmi_icon  = '🟢' %}
-                  {% elif bmi < 30 %}
-                    {% set bmi_label = 'Fazla Kilolu' %}
-                    {% set bmi_color = '#f4a261' %}
-                    {% set bmi_icon  = '🟡' %}
-                  {% else %}
-                    {% set bmi_label = 'Obez' %}
-                    {% set bmi_color = '#e63946' %}
-                    {% set bmi_icon  = '🔴' %}
-                  {% endif %}
+                  {% if bmi < 18.5 %}{% set bmi_label='Zayıf' %}{% set bmi_color='#0096c7' %}{% set bmi_icon='🔵' %}
+                  {% elif bmi < 25 %}{% set bmi_label='Normal' %}{% set bmi_color='#2d6a4f' %}{% set bmi_icon='🟢' %}
+                  {% elif bmi < 30 %}{% set bmi_label='Fazla Kilolu' %}{% set bmi_color='#f4a261' %}{% set bmi_icon='🟡' %}
+                  {% else %}{% set bmi_label='Obez' %}{% set bmi_color='#e63946' %}{% set bmi_icon='🔴' %}{% endif %}
                 <div style="font-size:1.8rem;">{{ bmi_icon }}</div>
-                <h6 class="fw-bold mt-1 mb-0" style="color:{{ bmi_color }};">
-                    {{ '%.1f'|format(bmi) }}
-                </h6>
+                <h6 class="fw-bold mt-1 mb-0" style="color:{{ bmi_color }};">{{ '%.1f'|format(bmi) }}</h6>
                 <small class="text-muted">VKİ – {{ bmi_label }}</small>
                 {% else %}
                 <div style="font-size:1.8rem;">📊</div>
                 <h6 class="fw-bold mt-1 mb-0">—</h6>
-                <small class="text-muted">
-                    <a href="{{ url_for('patient.profile') }}" class="text-decoration-none">Boy girin</a>
-                </small>
+                <small class="text-muted"><a href="{{ url_for('patient.profile') }}" class="text-decoration-none">Boy girin</a></small>
                 {% endif %}
             </div>
         </div>
@@ -106,11 +136,7 @@
             <div class="card-body text-center p-3">
                 <a href="{{ url_for('patient.messages') }}" class="text-decoration-none text-dark">
                     <div style="font-size:1.8rem;">💬</div>
-                    <h6 class="fw-bold mt-1 mb-0">
-                        {% if unread_count > 0 %}
-                        <span class="badge bg-danger">{{ unread_count }}</span>
-                        {% else %}0{% endif %}
-                    </h6>
+                    <h6 class="fw-bold mt-1 mb-0">{% if unread_count > 0 %}<span class="badge bg-danger">{{ unread_count }}</span>{% else %}0{% endif %}</h6>
                     <small class="text-muted">Yeni mesaj</small>
                 </a>
             </div>
@@ -126,25 +152,153 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Stage Description -->
-    {% if patient.current_stage and patient.current_stage.description %}
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0 fw-bold">
-                    <i class="bi bi-journal-text me-2 text-success"></i>
-                    {% if patient.current_stage.is_free_day %}Serbest Gün{% else %}{{ patient.current_stage.stage_number }}. Etap{% endif %} – Ne Yiyebilirsiniz?
-                </h6>
+{# ── AKTIF ETAP BESLENME REHBERİ ────────────────────────────────────────────── #}
+{% if patient.current_stage %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-journal-check me-2 text-success"></i>
+            {% if patient.current_stage.is_free_day %}Serbest Gün
+            {% else %}{{ patient.current_stage.stage_number }}. Etap{% endif %} – Beslenme Rehberi
+        </h6>
+    </div>
+    <div class="card-body p-0">
+
+    {% set sn = patient.current_stage.stage_number %}
+
+    {# ── 1. ETAP ── #}
+    {% if sn == 1 and not patient.current_stage.is_free_day %}
+    <div class="p-3">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <p class="fw-semibold text-success mb-2"><i class="bi bi-check-circle me-1"></i>Yiyebileceklerin</p>
+                <p class="small fw-semibold mb-1">🍗 Beyaz Et</p>
+                <ul class="small mb-2"><li>Tavuk, tavuk ciğer</li><li>Hindi eti, hindi boyun, hindi ciğer, hindi füme</li></ul>
+                <p class="small fw-semibold mb-1">🐟 Deniz Ürünleri</p>
+                <ul class="small mb-2"><li>Taze balık (her türlü)</li><li>Dardanel ton balığı</li></ul>
+                <p class="small fw-semibold mb-1">🥩 Kırmızı Et & İşlenmiş Et</p>
+                <ul class="small mb-2"><li>Kırmızı et çeşitleri (ızgara/haşlama)</li><li>Adana, döner (ekmeksiz)</li><li>Köfte (ekmeksiz, unsuz)</li><li>Pastırma, sucuk, kavurma</li></ul>
+                <p class="small fw-semibold mb-1">🥚 Yumurta & Diğer</p>
+                <ul class="small mb-0"><li>Her öğünde yumurta — haşlanmış tercih edilir</li><li>Mantar</li></ul>
             </div>
-            <div class="card-body">
-                <div style="white-space: pre-line; font-size:0.9rem; line-height:1.7;">{{ patient.current_stage.description }}</div>
+            <div class="col-md-6">
+                <p class="fw-semibold text-info mb-2"><i class="bi bi-lightbulb me-1"></i>Öğün Düzeni</p>
+                <p class="small fw-semibold mb-1">☀️ Sabah</p>
+                <p class="small mb-2">Küçük kase yoğurt + 1 kaşık <strong>Lifalif yulaf ezmesi</strong></p>
+                <p class="small fw-semibold mb-1">🌤️ Öğle & 🌙 Akşam</p>
+                <ul class="small mb-2"><li>Et/balık/tavuk (ızgara tercih)</li><li>Küçük kase yoğurt</li></ul>
+                <p class="small fw-semibold mb-1">🍵 İçecek</p>
+                <p class="small mb-2">Çay ve kahvenin <strong>her türü yasak.</strong> Öğünden yarım saat sonra şekersiz <strong>yeşil çay</strong> içilebilir.</p>
+                <div class="alert alert-danger p-2 small mb-0">
+                    <strong>Yasaklar:</strong> Tüm sebzeler (mantar hariç), ekmek, tahıl, meyve, kızartma, şeker
+                </div>
             </div>
         </div>
     </div>
+
+    {# ── 2. ETAP ── #}
+    {% elif sn == 2 and not patient.current_stage.is_free_day %}
+    <div class="p-3">
+        <div class="alert alert-info small mb-3">1. Etap'ın tamamı geçerli + çiğ sebzeler ekleniyor.</div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <p class="fw-semibold text-success mb-2"><i class="bi bi-plus-circle me-1"></i>Eklenen Çiğ Sebzeler</p>
+                <div class="row small">
+                    <div class="col-6"><ul class="mb-0"><li>Roka, tere, nane</li><li>Maydanoz</li><li>Salatalık, turp</li><li>Biber, semizotu</li></ul></div>
+                    <div class="col-6"><ul class="mb-0"><li>Kereviz, yeşil soğan</li><li>Kıvırcık, marul</li><li>Az domates</li><li>Avokado</li><li>Mor & beyaz lahana</li></ul></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p class="fw-semibold mb-2">💡 İpuçları</p>
+                <ul class="small mb-2">
+                    <li>Yoğurt → kereviz/salatalık/semizotundan biri eklenerek <strong>cacık</strong> yapılabilir</li>
+                    <li>Salata: bol yeşillik + <strong>bol zeytinyağı</strong> + az domates</li>
+                    <li>Yumurtayı tereyağlı, kavurmalı, pastırmalı, sucuklu veya mantarlı yapabilirsin</li>
+                </ul>
+                <div class="alert alert-danger p-2 small mb-0"><strong>Yasak:</strong> Havuç, dereotu</div>
+            </div>
+        </div>
+    </div>
+
+    {# ── 3. ETAP ── #}
+    {% elif sn == 3 and not patient.current_stage.is_free_day %}
+    <div class="p-3">
+        <div class="alert alert-primary small mb-3">1. ve 2. Etap'ın tamamı geçerli + kahvaltı ve pişmiş sebzeler ekleniyor.</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <p class="fw-semibold text-success mb-2"><i class="bi bi-plus-circle me-1"></i>Kahvaltıya Eklenenler</p>
+                <ul class="small mb-0"><li>Peynir — <strong>az tuzlu</strong> (krem peynir yok)</li><li>Zeytin (yeşil & siyah)</li><li>3 ceviz</li><li>7 badem</li></ul>
+            </div>
+            <div class="col-md-4">
+                <p class="fw-semibold text-success mb-2"><i class="bi bi-plus-circle me-1"></i>Pişmiş Sebzeler</p>
+                <ul class="small mb-0"><li>Kabak, patlıcan, biber</li><li>Yeşil fasulye, bamya</li><li>Enginar, taze bakla</li><li>Brüksel lahanası</li><li>Beyaz lahana, pırasa</li></ul>
+                <p class="small text-muted mt-1">Buharda pişmiş tercih edilir.</p>
+            </div>
+            <div class="col-md-4">
+                <p class="fw-semibold mb-2">🍲 Çorba (Öğle & Akşam)</p>
+                <ul class="small mb-2"><li>Sebze çorbası (unsuz)</li><li>Mercimek çorbası</li><li>Kelle paça çorbası (unla terbiye yapılmayacak)</li></ul>
+                <div class="d-flex gap-1 flex-wrap mb-2">
+                    <span class="badge" style="background:#e76f51;font-size:.7rem">%40 Et</span>
+                    <span class="badge" style="background:#2d6a4f;font-size:.7rem">%30 Salata</span>
+                    <span class="badge" style="background:#0096c7;font-size:.7rem">%30 Tencere</span>
+                </div>
+                <div class="alert alert-danger p-2 small mb-0"><strong>Yasak:</strong> Patates, havuç, bezelye, kızartma, krem peynir</div>
+            </div>
+        </div>
+    </div>
+
+    {# ── 4. ETAP ── #}
+    {% elif sn == 4 and not patient.current_stage.is_free_day %}
+    <div class="p-3">
+        <div class="alert alert-warning small mb-3"><strong>4 Çalma Günü + 3 Saf Protein Günü</strong> — Dönüşümlü: Çalma → Saf Protein → Çalma → Saf Protein</div>
+        <div class="row g-3">
+            <div class="col-md-7">
+                <p class="fw-semibold mb-2" style="color:#6c5ce7"><i class="bi bi-star-fill me-1"></i>Çalma Günleri</p>
+                <p class="small fw-bold text-muted mb-1">☀️ Kahvaltı</p>
+                <ul class="small mb-2"><li>3 kuru kayısı + yulaf ezmeli yoğurt</li><li>Bir küçük meyve</li><li>İnce bir dilim ekmek</li><li>Yumurta, pastırma, sucuk, zeytin, peynir, yeşillikler</li></ul>
+                <p class="small fw-bold text-muted mb-1">🌤️ Öğle</p>
+                <ul class="small mb-2">
+                    <li>3 kaşık bakliyat (nohut, fasulye...)</li>
+                    <li>3 kaşık bulgur <strong>veya</strong> pirinç pilavı</li>
+                    <li>Küçük meyve <strong>veya</strong> fındıklı lahmacun <strong>veya</strong> küçük bir dilim ekmek <strong>veya</strong> 3 sarma (sırça parmak kalınlığında) <strong>veya</strong> küçük bir dolma</li>
+                    <li>Küçük kase yoğurt (cacık da olur)</li>
+                    <li>Bol yeşillikli az domatesli zeytinyağlı salata</li>
+                </ul>
+                <p class="small fw-bold text-muted mb-1">🌙 Akşam</p>
+                <div class="d-flex gap-1 flex-wrap">
+                    <span class="badge" style="background:#e76f51;font-size:.7rem">%40 Protein</span>
+                    <span class="badge" style="background:#2d6a4f;font-size:.7rem">%30 Salata</span>
+                    <span class="badge" style="background:#0096c7;font-size:.7rem">%30 Yoğurt/Cacık</span>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <p class="fw-semibold text-warning mb-2"><i class="bi bi-shield-fill me-1"></i>Saf Protein Günleri</p>
+                <p class="small mb-3">1. Etap menüsü uygulanır — et, balık, tavuk, yumurta, yoğurt.</p>
+                <div class="alert alert-secondary p-2 small mb-0">
+                    <i class="bi bi-bicycle me-1"></i><strong>Spor için</strong> beslenme koçunuzla planlayınız.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── SERBEST GÜN ── #}
+    {% elif patient.current_stage.is_free_day %}
+    <div class="p-4 text-center">
+        <div class="display-4 mb-2">🎉</div>
+        <h5 class="fw-bold text-warning">Serbest Gün!</h5>
+        <p class="text-muted mb-2">Canınız ne çekiyorsa yiyebilirsiniz — ama abartmayın!</p>
+        <p class="small text-muted">Her şeyden azar azar. Yarın 1. Etap başlıyor.</p>
+    </div>
     {% endif %}
 
-    <!-- Active Supplements -->
+    </div>
+</div>
+{% endif %}
+
+{# ── TAKVİYELER & SON ÖLÇÜM ─────────────────────────────────────────────────── #}
+<div class="row g-3">
     {% if active_supplements %}
     <div class="col-md-6">
         <div class="card h-100">
@@ -158,12 +312,8 @@
                     <div class="me-2 mt-1">💊</div>
                     <div>
                         <strong class="small">{{ s.product_name }}</strong>
-                        {% if s.usage_time %}
-                        <br><small class="text-success"><i class="bi bi-clock me-1"></i>{{ s.usage_time }}</small>
-                        {% endif %}
-                        {% if s.usage_instructions %}
-                        <br><small class="text-muted">{{ s.usage_instructions }}</small>
-                        {% endif %}
+                        {% if s.usage_time %}<br><small class="text-success"><i class="bi bi-clock me-1"></i>{{ s.usage_time }}</small>{% endif %}
+                        {% if s.usage_instructions %}<br><small class="text-muted">{{ s.usage_instructions }}</small>{% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -172,7 +322,6 @@
     </div>
     {% endif %}
 
-    <!-- Last Measurement -->
     {% if last_measurement %}
     <div class="col-md-6">
         <div class="card h-100">
@@ -182,34 +331,12 @@
             </div>
             <div class="card-body">
                 <div class="row row-cols-2 g-2">
-                    {% set fields = [
-                        ('Boyun', last_measurement.boyun),
-                        ('Üst Göğüs', last_measurement.ust_gogus),
-                        ('Göğüs', last_measurement.gogus),
-                        ('Alt Göğüs', last_measurement.alt_gogus),
-                        ('Göbek', last_measurement.gobek),
-                        ('Bel', last_measurement.bel),
-                        ('Kalça', last_measurement.kalca),
-                        ('Sağ Kol', last_measurement.sag_kol),
-                        ('Sol Kol', last_measurement.sol_kol),
-                        ('Sağ Bacak', last_measurement.sag_bacak),
-                        ('Sol Bacak', last_measurement.sol_bacak),
-                    ] %}
-                    {% for label, val in fields %}
-                    {% if val %}
-                    <div class="col">
-                        <div class="d-flex justify-content-between">
-                            <small class="text-muted">{{ label }}</small>
-                            <strong class="small">{{ val }} cm</strong>
-                        </div>
-                    </div>
-                    {% endif %}
+                    {% for label, val in [('Boyun',last_measurement.boyun),('Üst Göğüs',last_measurement.ust_gogus),('Göğüs',last_measurement.gogus),('Alt Göğüs',last_measurement.alt_gogus),('Göbek',last_measurement.gobek),('Bel',last_measurement.bel),('Kalça',last_measurement.kalca),('Sağ Kol',last_measurement.sag_kol),('Sol Kol',last_measurement.sol_kol),('Sağ Bacak',last_measurement.sag_bacak),('Sol Bacak',last_measurement.sol_bacak)] %}
+                    {% if val %}<div class="col"><div class="d-flex justify-content-between"><small class="text-muted">{{ label }}</small><strong class="small">{{ val }} cm</strong></div></div>{% endif %}
                     {% endfor %}
                 </div>
                 <div class="mt-3 text-center">
-                    <a href="{{ url_for('patient.measurements') }}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-plus-lg me-1"></i>Yeni Ölçüm Ekle
-                    </a>
+                    <a href="{{ url_for('patient.measurements') }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>Yeni Ölçüm Ekle</a>
                 </div>
             </div>
         </div>
@@ -220,41 +347,33 @@
             <div class="card-body text-center py-5">
                 <div class="display-5 mb-2">📏</div>
                 <p class="text-muted">Henüz ölçüm eklemediniz.</p>
-                <a href="{{ url_for('patient.measurements') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i>İlk Ölçümü Ekle
-                </a>
+                <a href="{{ url_for('patient.measurements') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>İlk Ölçümü Ekle</a>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Quick Links -->
+    {# Hızlı Linkler #}
     <div class="col-12">
         <div class="row g-2">
             <div class="col-6 col-md-3">
                 <a href="{{ url_for('patient.measurements') }}" class="btn btn-outline-primary w-100 py-3">
-                    <i class="bi bi-rulers d-block fs-4 mb-1"></i>
-                    <small>Ölçüm Ekle</small>
+                    <i class="bi bi-rulers d-block fs-4 mb-1"></i><small>Ölçüm Ekle</small>
                 </a>
             </div>
             <div class="col-6 col-md-3">
                 <a href="{{ url_for('patient.messages') }}" class="btn btn-outline-success w-100 py-3 position-relative">
-                    <i class="bi bi-chat-dots d-block fs-4 mb-1"></i>
-                    <small>Mesajlar</small>
-                    {% if unread_count > 0 %}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_count }}</span>
-                    {% endif %}
+                    <i class="bi bi-chat-dots d-block fs-4 mb-1"></i><small>Mesajlar</small>
+                    {% if unread_count > 0 %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ unread_count }}</span>{% endif %}
                 </a>
             </div>
             <div class="col-6 col-md-3">
                 <a href="{{ url_for('patient.supplements') }}" class="btn btn-outline-warning w-100 py-3">
-                    <i class="bi bi-capsule-pill d-block fs-4 mb-1"></i>
-                    <small>Takviyeler</small>
+                    <i class="bi bi-capsule-pill d-block fs-4 mb-1"></i><small>Takviyeler</small>
                 </a>
             </div>
             <div class="col-6 col-md-3">
-                <a href="{{ url_for('patient.diet_rules') }}"
-                   class="btn w-100 py-3 {{ 'btn-success' if patient.personal_program else 'btn-outline-info' }}">
+                <a href="{{ url_for('patient.diet_rules') }}" class="btn w-100 py-3 {{ 'btn-success' if patient.personal_program else 'btn-outline-info' }}">
                     <i class="bi bi-journal-text d-block fs-4 mb-1"></i>
                     <small>{{ '⭐ Özel Programım' if patient.personal_program else 'Diyet Kuralları' }}</small>
                 </a>
@@ -262,11 +381,56 @@
             <div class="col-12 col-md-6">
                 <a href="{{ url_for('ai.chat') }}" class="btn btn-success w-100 py-3"
                    style="background:linear-gradient(135deg,var(--primary-dark),var(--primary-light));">
-                    <i class="bi bi-robot d-block fs-4 mb-1"></i>
-                    <small>🤖 Diyet Asistanı – Soru Sor</small>
+                    <i class="bi bi-robot d-block fs-4 mb-1"></i><small>🤖 Diyet Asistanı – Soru Sor</small>
                 </a>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+{% if patient.height_cm and patient.gender in ['male', 'female'] %}
+{% set lm = last_measurement %}
+{% if lm and lm.boyun and lm.bel %}
+(function() {
+    const gender = "{{ patient.gender }}";
+    const height = {{ patient.height_cm }};
+    const boyun  = {{ lm.boyun }};
+    const bel    = {{ lm.bel }};
+    const kalca  = {{ lm.kalca or 0 }};
+    const weight = {{ lm.weight or 0 }};
+
+    let denom;
+    if (gender === 'male') {
+        const diff = bel - boyun;
+        if (diff <= 0) return;
+        denom = 1.0324 - 0.19077 * Math.log10(diff) + 0.15456 * Math.log10(height);
+    } else {
+        const diff = bel + kalca - boyun;
+        if (diff <= 0) return;
+        denom = 1.29579 - 0.35004 * Math.log10(diff) + 0.22100 * Math.log10(height);
+    }
+    if (denom <= 0) return;
+    const pct = Math.round((495 / denom - 450) * 10) / 10;
+    if (pct <= 0 || pct > 60) return;
+
+    const cats = gender === 'male'
+        ? [[13,'Mükemmel'],[17,'İyi'],[24,'Ortalama'],[99,'Obez']]
+        : [[20,'Mükemmel'],[24,'İyi'],[31,'Ortalama'],[99,'Obez']];
+    const cat = cats.find(c => pct <= c[0])?.[1] || 'Obez';
+
+    document.getElementById('navyResult').textContent = '%' + pct;
+    document.getElementById('navyCategory').textContent = cat;
+    if (weight > 0) {
+        const fm = Math.round(weight * pct / 100 * 10) / 10;
+        const lm2 = Math.round((weight - fm) * 10) / 10;
+        document.getElementById('navyFatMass').textContent  = fm + ' kg';
+        document.getElementById('navyLeanMass').textContent = lm2 + ' kg';
+    }
+})();
+{% endif %}
+{% endif %}
+</script>
 {% endblock %}
