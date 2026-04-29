@@ -50,30 +50,51 @@ def measurements():
     form = MeasurementForm()
 
     if form.validate_on_submit():
-        measurement = Measurement(
+        # Aynı tarihe ait ölçüm varsa güncelle, yoksa ekle
+        existing = Measurement.query.filter_by(
             patient_id=patient.id,
-            date=form.date.data,
-            boyun=form.boyun.data,
-            ust_gogus=form.ust_gogus.data,
-            gogus=form.gogus.data,
-            alt_gogus=form.alt_gogus.data,
-            gobek=form.gobek.data,
-            bel=form.bel.data,
-            kalca=form.kalca.data,
-            sag_kol=form.sag_kol.data,
-            sol_kol=form.sol_kol.data,
-            sag_bacak=form.sag_bacak.data,
-            sol_bacak=form.sol_bacak.data,
-            weight=form.weight.data,
-            notes=form.notes.data,
-            stage_id=patient.current_stage_id
-        )
-        db.session.add(measurement)
-        db.session.commit()
-        flash('Ölçümünüz kaydedildi!', 'success')
+            date=form.date.data
+        ).first()
+        if existing:
+            existing.boyun     = form.boyun.data
+            existing.ust_gogus = form.ust_gogus.data
+            existing.gogus     = form.gogus.data
+            existing.alt_gogus = form.alt_gogus.data
+            existing.gobek     = form.gobek.data
+            existing.bel       = form.bel.data
+            existing.kalca     = form.kalca.data
+            existing.sag_kol   = form.sag_kol.data
+            existing.sol_kol   = form.sol_kol.data
+            existing.sag_bacak = form.sag_bacak.data
+            existing.sol_bacak = form.sol_bacak.data
+            existing.weight    = form.weight.data
+            existing.notes     = form.notes.data
+            db.session.commit()
+            flash('Ölçüm güncellendi!', 'success')
+        else:
+            measurement = Measurement(
+                patient_id=patient.id,
+                date=form.date.data,
+                boyun=form.boyun.data,
+                ust_gogus=form.ust_gogus.data,
+                gogus=form.gogus.data,
+                alt_gogus=form.alt_gogus.data,
+                gobek=form.gobek.data,
+                bel=form.bel.data,
+                kalca=form.kalca.data,
+                sag_kol=form.sag_kol.data,
+                sol_kol=form.sol_kol.data,
+                sag_bacak=form.sag_bacak.data,
+                sol_bacak=form.sol_bacak.data,
+                weight=form.weight.data,
+                notes=form.notes.data,
+                stage_id=patient.current_stage_id
+            )
+            db.session.add(measurement)
+            db.session.commit()
+            flash('Ölçümünüz kaydedildi!', 'success')
         return redirect(url_for('patient.measurements'))
 
-    # Default date to today
     if request.method == 'GET':
         form.date.data = date.today()
 
@@ -82,6 +103,50 @@ def measurements():
                            patient=patient,
                            form=form,
                            measurements=all_measurements)
+
+
+@patient_bp.route('/measurements/<int:measurement_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_measurement(measurement_id):
+    patient = get_current_patient()
+    m = Measurement.query.filter_by(id=measurement_id, patient_id=patient.id).first_or_404()
+    form = MeasurementForm(obj=m)
+
+    if form.validate_on_submit():
+        m.date      = form.date.data
+        m.boyun     = form.boyun.data
+        m.ust_gogus = form.ust_gogus.data
+        m.gogus     = form.gogus.data
+        m.alt_gogus = form.alt_gogus.data
+        m.gobek     = form.gobek.data
+        m.bel       = form.bel.data
+        m.kalca     = form.kalca.data
+        m.sag_kol   = form.sag_kol.data
+        m.sol_kol   = form.sol_kol.data
+        m.sag_bacak = form.sag_bacak.data
+        m.sol_bacak = form.sol_bacak.data
+        m.weight    = form.weight.data
+        m.notes     = form.notes.data
+        db.session.commit()
+        flash('Ölçüm güncellendi!', 'success')
+        return redirect(url_for('patient.measurements'))
+
+    return render_template('patient/measurements.html',
+                           patient=patient,
+                           form=form,
+                           edit_measurement=m,
+                           measurements=patient.measurements.order_by(Measurement.date.desc()).all())
+
+
+@patient_bp.route('/measurements/<int:measurement_id>/delete', methods=['POST'])
+@login_required
+def delete_measurement(measurement_id):
+    patient = get_current_patient()
+    m = Measurement.query.filter_by(id=measurement_id, patient_id=patient.id).first_or_404()
+    db.session.delete(m)
+    db.session.commit()
+    flash('Ölçüm silindi.', 'info')
+    return redirect(url_for('patient.measurements'))
 
 
 @patient_bp.route('/measurements/data')
