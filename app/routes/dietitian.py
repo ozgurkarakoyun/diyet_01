@@ -29,14 +29,21 @@ def get_patient_or_404(patient_id, dietitian):
 def dashboard():
     dietitian = get_current_dietitian()
     patients = Patient.query.filter_by(dietitian_id=dietitian.id).order_by(Patient.created_at.desc()).all()
-    
+
     active_count = sum(1 for p in patients if p.is_active)
-    
-    # Unread messages count
-    unread_count = Message.query.filter_by(
+
+    # Unread messages — hasta bazında grupla
+    from sqlalchemy import func
+    unread_rows = db.session.query(
+        Message.sender_patient_id,
+        func.count(Message.id).label('cnt')
+    ).filter_by(
         receiver_dietitian_id=dietitian.id,
         is_read=False
-    ).count()
+    ).group_by(Message.sender_patient_id).all()
+
+    unread_by_patient = {row.sender_patient_id: row.cnt for row in unread_rows}
+    unread_count = sum(unread_by_patient.values())
 
     # Check and auto-advance stages
     for patient in patients:
@@ -48,7 +55,8 @@ def dashboard():
                            dietitian=dietitian,
                            patients=patients,
                            active_count=active_count,
-                           unread_count=unread_count)
+                           unread_count=unread_count,
+                           unread_by_patient=unread_by_patient)
 
 
 @dietitian_bp.route('/patient/<int:patient_id>')
