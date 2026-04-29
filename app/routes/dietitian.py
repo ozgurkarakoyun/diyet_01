@@ -104,9 +104,11 @@ def change_stage(patient_id):
 
     if form.validate_on_submit():
         new_stage = DietStage.query.get_or_404(form.stage_id.data)
-        _change_patient_stage(patient, new_stage, changed_by='dietitian', notes=form.notes.data)
+        start_day = max(1, form.start_day.data or 1)
+        _change_patient_stage(patient, new_stage, changed_by='dietitian',
+                              notes=form.notes.data, start_day=start_day)
         db.session.commit()
-        flash(f'{patient.nickname} için etap {new_stage.stage_number}. Etap olarak değiştirildi.', 'success')
+        flash(f'{patient.nickname} için {new_stage.stage_number}. Etap, {start_day}. günden itibaren ayarlandı.', 'success')
     else:
         flash('Form hatası. Lütfen tekrar deneyin.', 'danger')
 
@@ -291,8 +293,11 @@ def _mark_patient_messages_read(patient_id, dietitian_id):
         msg.mark_as_read()
 
 
-def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
+def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None, start_day=1):
     today = date.today()
+    # start_day=3 ise başlangıç tarihi 2 gün öncesi olur (bugün 3. gün sayılır)
+    start_day = max(1, start_day or 1)
+    stage_start = today - timedelta(days=start_day - 1)
 
     # Close current stage history
     current_history = PatientStageHistory.query.filter_by(
@@ -300,7 +305,7 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
         end_date=None
     ).first()
     if current_history:
-        current_history.end_date = today
+        current_history.end_date = stage_start - timedelta(days=1)
 
     # Determine cycle number
     cycle = patient.cycle_number or 1
@@ -309,13 +314,13 @@ def _change_patient_stage(patient, new_stage, changed_by='auto', notes=None):
         patient.cycle_number = cycle
 
     patient.current_stage_id = new_stage.id
-    patient.stage_start_date = today
+    patient.stage_start_date = stage_start
     patient.is_free_day = new_stage.is_free_day
 
     new_history = PatientStageHistory(
         patient_id=patient.id,
         stage_id=new_stage.id,
-        start_date=today,
+        start_date=stage_start,
         cycle_number=cycle,
         changed_by=changed_by,
         notes=notes

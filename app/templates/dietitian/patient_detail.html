@@ -127,6 +127,14 @@
                         {{ stage_form.stage_id(class="form-select form-select-sm") }}
                     </div>
                     <div class="mb-2">
+                        <label class="form-label small fw-semibold">Etabın Kaçıncı Günü?</label>
+                        <div class="input-group input-group-sm">
+                            {{ stage_form.start_day(class="form-control form-control-sm", min=1, max=30, placeholder="1") }}
+                            <span class="input-group-text">. gün</span>
+                        </div>
+                        <div class="form-text">Hasta etabın ortasındaysa doğru günü girin.</div>
+                    </div>
+                    <div class="mb-2">
                         {{ stage_form.notes(class="form-control form-control-sm", placeholder="Not (opsiyonel)", rows=2) }}
                     </div>
                     <button type="submit" class="btn btn-sm btn-primary w-100">
@@ -226,9 +234,71 @@
 
             <!-- TAB: GRAFİK -->
             <div class="tab-pane fade show active" id="tab-grafik">
-                {% if measurements %}
 
-                <!-- İstatistik Kartları -->
+                <!-- Etap İlerleme Kartı -->
+                {% if patient.current_stage %}
+                {% set days_in = patient.get_days_in_current_stage() %}
+                {% set total_days = patient.current_stage.duration_days if not patient.current_stage.is_free_day else 1 %}
+                {% set pct = [[(days_in / total_days * 100)|round|int, 100]|min, 0]|max %}
+                {% set stage_colors = {1:'#e76f51', 2:'#2d6a4f', 3:'#0096c7', 4:'#6c5ce7'} %}
+                {% set color = stage_colors.get(patient.current_stage.stage_number, '#adb5bd') %}
+                <div class="card mb-3">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <span class="fw-bold" style="color:{{ color }}">
+                                    {% if patient.current_stage.is_free_day %}🎉 Serbest Gün
+                                    {% else %}{{ patient.current_stage.stage_number }}. Etap — {{ patient.current_stage.name }}
+                                    {% endif %}
+                                </span>
+                                <span class="text-muted small ms-2">{{ patient.cycle_number }}. Döngü</span>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold fs-5" style="color:{{ color }}">{{ days_in }}</span>
+                                <span class="text-muted small"> / {{ total_days }} gün</span>
+                            </div>
+                        </div>
+                        <div class="progress" style="height:18px;border-radius:9px;background:#f0f0f0;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width:{{ pct }}%;background:{{ color }};border-radius:9px;transition:width .6s ease;"
+                                 aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+                                {% if pct > 15 %}<span class="small fw-bold">%{{ pct }}</span>{% endif %}
+                            </div>
+                        </div>
+                        <!-- Döngü Zaman Çizelgesi -->
+                        <div class="d-flex gap-1 mt-3 flex-wrap">
+                            {% for h in measurements | groupby('date') | list %}{% endfor %}
+                            {% set ns = namespace(day=0) %}
+                            {% set stage_durations = [(1,'#e76f51',4,'1.Etap'),(2,'#2d6a4f',5,'2.Etap'),(3,'#0096c7',5,'3.Etap'),(4,'#6c5ce7',7,'4.Etap')] %}
+                            {% for snum, scolor, sdays, slabel in stage_durations %}
+                            <div class="d-flex flex-column align-items-center" style="flex:{{ sdays }};min-width:0;">
+                                <div class="w-100 rounded" style="height:10px;background:{{ scolor }};opacity:{% if patient.current_stage.stage_number == snum %}1{% else %}0.3{% endif %};"></div>
+                                <small class="text-muted mt-1" style="font-size:.65rem;white-space:nowrap;">{{ slabel }} ({{ sdays }}g)</small>
+                            </div>
+                            {% endfor %}
+                            <div class="d-flex flex-column align-items-center" style="flex:1;min-width:0;">
+                                <div class="w-100 rounded" style="height:10px;background:#ffc107;opacity:{% if patient.current_stage.is_free_day %}1{% else %}0.3{% endif %};"></div>
+                                <small class="text-muted mt-1" style="font-size:.65rem;">Serbest</small>
+                            </div>
+                        </div>
+                        {% if patient.stage_start_date %}
+                        <div class="text-muted small mt-2">
+                            <i class="bi bi-calendar3 me-1"></i>
+                            {{ patient.stage_start_date.strftime('%d.%m.%Y') }}'den itibaren
+                            {% if not patient.current_stage.is_free_day %}
+                            — <span class="{{ 'text-danger fw-semibold' if days_in > total_days else 'text-success' }}">
+                                {% if days_in > total_days %}{{ days_in - total_days }} gün aşıldı!
+                                {% else %}{{ total_days - days_in + 1 }} gün kaldı
+                                {% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if measurements %}
                 {% if measurements|length >= 2 %}
                 {% set first_m = measurements[0] %}
                 {% set last_m  = measurements[-1] %}

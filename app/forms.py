@@ -96,6 +96,7 @@ class RegistrationCodeForm(FlaskForm):
 
 class StageChangeForm(FlaskForm):
     stage_id = SelectField('Yeni Etap', coerce=int, validators=[DataRequired()])
+    start_day = IntegerField('Etabın Kaçıncı Günü', validators=[Optional()], default=1)
     notes = TextAreaField('Notlar', validators=[Optional(), Length(max=500)])
     submit = SubmitField('Etabı Değiştir')
 
