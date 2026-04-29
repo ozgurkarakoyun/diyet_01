@@ -1,58 +1,301 @@
 {% extends "base.html" %}
 {% block title %}Giriş Yap – DiyetTakip{% endblock %}
 
+{% block extra_css %}
+<style>
+.calc-label { font-size:.8rem; font-weight:600; margin-bottom:3px; }
+.result-box { border-radius:12px; padding:14px 16px; text-align:center; }
+.bmi-zayif  { background:#cfe2ff; color:#084298; }
+.bmi-normal { background:#d1e7dd; color:#0a3622; }
+.bmi-fazla  { background:#fff3cd; color:#664d03; }
+.bmi-obez   { background:#f8d7da; color:#842029; }
+.navy-exc { background:#d1e7dd; color:#0a3622; }
+.navy-iyi { background:#cfe2ff; color:#084298; }
+.navy-ort { background:#fff3cd; color:#664d03; }
+.navy-obe { background:#f8d7da; color:#842029; }
+</style>
+{% endblock %}
+
 {% block auth_content %}
-<div class="min-vh-100 d-flex align-items-center justify-content-center"
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-4"
      style="background: linear-gradient(135deg, #1b4332 0%, #40916c 100%);">
-    <div class="container" style="max-width:420px;">
+    <div class="container" style="max-width:900px;">
         <div class="text-center mb-4">
             <div class="display-4 mb-2">🥗</div>
             <h2 class="text-white fw-bold">DiyetTakip</h2>
             <p class="text-white-50">Diyet programınızı takip edin</p>
         </div>
-        <div class="card">
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-4">Giriş Yap</h5>
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show py-2">
-                    {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
-                {% endwith %}
 
-                <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
-                    {{ form.hidden_tag() }}
-                    <div class="mb-3">
-                        {{ form.email.label(class="form-label fw-semibold") }}
-                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
-                            placeholder="ornek@mail.com", autocomplete="email") }}
-                        {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-                    </div>
-                    <div class="mb-3">
-                        {{ form.password.label(class="form-label fw-semibold") }}
-                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
-                            placeholder="••••••••", autocomplete="current-password") }}
-                        {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-                    </div>
-                    <div class="mb-3">
-                        {{ form.remember_me(class="form-check-input") }}
-                        {{ form.remember_me.label(class="form-check-label ms-1") }}
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap
-                    </button>
-                </form>
+        <div class="row g-4 align-items-start">
 
-                <hr class="my-3">
-                <div class="text-center">
-                    <small class="text-muted">Hesabınız yok mu?</small><br>
-                    <a href="{{ url_for('auth.register_patient') }}" class="btn btn-sm btn-outline-primary mt-2">
-                        <i class="bi bi-person-plus me-1"></i>Hasta Kaydı
-                    </a>
+            <!-- Giriş Formu -->
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Giriş Yap</h5>
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show py-2">
+                            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.email.label(class="form-label fw-semibold") }}
+                                {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                                    placeholder="ornek@mail.com", autocomplete="email") }}
+                                {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.password.label(class="form-label fw-semibold") }}
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                                    placeholder="••••••••", autocomplete="current-password") }}
+                                {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.remember_me(class="form-check-input") }}
+                                {{ form.remember_me.label(class="form-check-label ms-1") }}
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Giriş Yap
+                            </button>
+                        </form>
+
+                        <hr class="my-3">
+                        <div class="text-center">
+                            <small class="text-muted">Hesabınız yok mu?</small><br>
+                            <a href="{{ url_for('auth.register_patient') }}" class="btn btn-sm btn-outline-primary mt-2">
+                                <i class="bi bi-person-plus me-1"></i>Hasta Kaydı
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Hesap Makinesi -->
+            <div class="col-md-7">
+                <div class="card border-0 shadow">
+                    <div class="card-header" style="background:rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.15);">
+                        <h6 class="mb-0 fw-bold text-white" style="background:transparent;">
+                            <i class="bi bi-calculator me-2"></i>Ücretsiz Vücut Analizi
+                        </h6>
+                    </div>
+                    <div class="card-body" style="background:rgba(255,255,255,.95);">
+                        <p class="text-muted small mb-3">Kayıt olmadan VKİ ve ABD Donanması yağ oranınızı hesaplayın.</p>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="calc-label">Cinsiyet</label>
+                                <select class="form-select form-select-sm" id="c_gender" onchange="calculate()">
+                                    <option value="male">Erkek</option>
+                                    <option value="female">Kadın</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="calc-label">Boy (cm)</label>
+                                <input type="number" class="form-control form-control-sm" id="c_height"
+                                       placeholder="örn. 175" min="100" max="220" oninput="calculate()">
+                            </div>
+                            <div class="col-6">
+                                <label class="calc-label">Kilo (kg)</label>
+                                <input type="number" class="form-control form-control-sm" id="c_weight"
+                                       placeholder="örn. 80" min="30" max="300" oninput="calculate()">
+                            </div>
+                            <div class="col-6">
+                                <label class="calc-label">Boyun (cm)</label>
+                                <input type="number" class="form-control form-control-sm" id="c_boyun"
+                                       placeholder="örn. 38" min="20" max="60" oninput="calculate()">
+                            </div>
+                            <div class="col-6">
+                                <label class="calc-label">Bel (cm) <span class="text-muted fw-normal">göbek hizası</span></label>
+                                <input type="number" class="form-control form-control-sm" id="c_bel"
+                                       placeholder="örn. 90" min="40" max="180" oninput="calculate()">
+                            </div>
+                            <div class="col-6" id="kalcaRow">
+                                <label class="calc-label">Kalça (cm) <span class="text-muted fw-normal">sadece kadın</span></label>
+                                <input type="number" class="form-control form-control-sm" id="c_kalca"
+                                       placeholder="örn. 100" min="40" max="180" oninput="calculate()">
+                            </div>
+                        </div>
+
+                        <!-- Sonuçlar -->
+                        <div id="results" style="display:none;">
+                            <hr class="my-3">
+                            <div class="row g-2">
+                                <!-- VKİ -->
+                                <div class="col-6">
+                                    <div class="result-box" id="bmiBox">
+                                        <div class="fw-bold" style="font-size:1.8rem;" id="bmiVal">—</div>
+                                        <div class="fw-semibold small" id="bmiLabel">VKİ</div>
+                                        <div class="small mt-1" id="bmiCat"></div>
+                                    </div>
+                                </div>
+                                <!-- Navy -->
+                                <div class="col-6">
+                                    <div class="result-box" id="navyBox">
+                                        <div class="fw-bold" style="font-size:1.8rem;" id="navyVal">—</div>
+                                        <div class="fw-semibold small">US Navy Yağ %</div>
+                                        <div class="small mt-1" id="navyCat"></div>
+                                    </div>
+                                </div>
+                                <!-- Detaylar -->
+                                <div class="col-12" id="detailRow" style="display:none;">
+                                    <div class="d-flex gap-2 flex-wrap justify-content-center">
+                                        <span class="badge bg-light text-dark border" id="d_fat"></span>
+                                        <span class="badge bg-light text-dark border" id="d_lean"></span>
+                                        <span class="badge bg-light text-dark border" id="d_ideal"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Referans tablosu -->
+                            <div class="mt-3">
+                                <p class="small fw-semibold text-muted mb-1">Referans Değerler</p>
+                                <div class="row g-1" style="font-size:.72rem;">
+                                    <div class="col-6">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-light"><tr><th>VKİ</th><th>Kategori</th></tr></thead>
+                                            <tbody>
+                                                <tr><td>&lt;18.5</td><td>Zayıf</td></tr>
+                                                <tr><td>18.5–24.9</td><td class="text-success fw-bold">Normal</td></tr>
+                                                <tr><td>25–29.9</td><td>Fazla Kilolu</td></tr>
+                                                <tr><td>≥30</td><td class="text-danger">Obez</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-6">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-light"><tr><th>Yağ %</th><th>Kategori</th></tr></thead>
+                                            <tbody id="navyRefTable">
+                                                <!-- JS ile doldurulur -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="calcHint" class="text-center text-muted small mt-2">
+                            <i class="bi bi-arrow-up me-1"></i>Değerleri girince sonuçlar otomatik hesaplanır
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cinsiyet değişince kalça alanını göster/gizle ve referans tablosunu güncelle
+document.getElementById('c_gender').addEventListener('change', function() {
+    const isFemale = this.value === 'female';
+    document.getElementById('kalcaRow').style.display = isFemale ? '' : 'none';
+    updateNavyRef(this.value);
+    calculate();
+});
+
+function updateNavyRef(gender) {
+    const refs = gender === 'male'
+        ? [['%6–13','Mükemmel'],['%14–17','İyi'],['%18–24','Ortalama'],['%25+','Obez']]
+        : [['%14–20','Mükemmel'],['%21–24','İyi'],['%25–31','Ortalama'],['%32+','Obez']];
+    document.getElementById('navyRefTable').innerHTML = refs.map(([r,l]) =>
+        `<tr><td>${r}</td><td>${l}</td></tr>`).join('');
+}
+updateNavyRef('male');
+
+function calculate() {
+    const gender = document.getElementById('c_gender').value;
+    const height = parseFloat(document.getElementById('c_height').value);
+    const weight = parseFloat(document.getElementById('c_weight').value);
+    const boyun  = parseFloat(document.getElementById('c_boyun').value);
+    const bel    = parseFloat(document.getElementById('c_bel').value);
+    const kalca  = parseFloat(document.getElementById('c_kalca').value) || 0;
+
+    // En az boy ve kilo gerekli
+    if (!height || !weight || height < 50 || weight < 10) {
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('calcHint').style.display = '';
+        return;
+    }
+
+    document.getElementById('results').style.display = '';
+    document.getElementById('calcHint').style.display = 'none';
+
+    // ── VKİ ──────────────────────────────────────────────────────────────────
+    const bmi = weight / ((height / 100) ** 2);
+    const bmiR = Math.round(bmi * 10) / 10;
+    document.getElementById('bmiVal').textContent = bmiR;
+
+    let bmiClass, bmiCat, idealMin, idealMax;
+    if (bmi < 18.5)      { bmiClass='bmi-zayif';  bmiCat='Zayıf'; }
+    else if (bmi < 25)   { bmiClass='bmi-normal'; bmiCat='Normal ✓'; }
+    else if (bmi < 30)   { bmiClass='bmi-fazla';  bmiCat='Fazla Kilolu'; }
+    else                 { bmiClass='bmi-obez';   bmiCat='Obez'; }
+
+    const bmiBox = document.getElementById('bmiBox');
+    bmiBox.className = 'result-box ' + bmiClass;
+    document.getElementById('bmiCat').textContent = bmiCat;
+
+    // İdeal kilo aralığı (VKİ 18.5–24.9)
+    idealMin = Math.round(18.5 * (height/100)**2 * 10) / 10;
+    idealMax = Math.round(24.9 * (height/100)**2 * 10) / 10;
+    document.getElementById('d_ideal').textContent = `İdeal kilo: ${idealMin}–${idealMax} kg`;
+
+    // ── US NAVY ───────────────────────────────────────────────────────────────
+    let navyPct = null;
+    if (boyun > 0 && bel > 0 && (gender === 'male' || kalca > 0)) {
+        let denom;
+        if (gender === 'male') {
+            const diff = bel - boyun;
+            if (diff > 0) denom = 1.0324 - 0.19077 * Math.log10(diff) + 0.15456 * Math.log10(height);
+        } else {
+            const diff = bel + kalca - boyun;
+            if (diff > 0) denom = 1.29579 - 0.35004 * Math.log10(diff) + 0.22100 * Math.log10(height);
+        }
+        if (denom && denom > 0) {
+            navyPct = Math.round((495 / denom - 450) * 10) / 10;
+            if (navyPct <= 0 || navyPct > 65) navyPct = null;
+        }
+    }
+
+    const navyBox = document.getElementById('navyBox');
+    const navyVal = document.getElementById('navyVal');
+    const navyCat = document.getElementById('navyCat');
+
+    if (navyPct !== null) {
+        navyVal.textContent = '%' + navyPct;
+        let nClass, nCat;
+        if (gender === 'male') {
+            if (navyPct <= 13)      { nClass='navy-exc'; nCat='Mükemmel ✓'; }
+            else if (navyPct <= 17) { nClass='navy-iyi'; nCat='İyi'; }
+            else if (navyPct <= 24) { nClass='navy-ort'; nCat='Ortalama'; }
+            else                    { nClass='navy-obe'; nCat='Obez'; }
+        } else {
+            if (navyPct <= 20)      { nClass='navy-exc'; nCat='Mükemmel ✓'; }
+            else if (navyPct <= 24) { nClass='navy-iyi'; nCat='İyi'; }
+            else if (navyPct <= 31) { nClass='navy-ort'; nCat='Ortalama'; }
+            else                    { nClass='navy-obe'; nCat='Obez'; }
+        }
+        navyBox.className = 'result-box ' + nClass;
+        navyCat.textContent = nCat;
+
+        const fatMass  = Math.round(weight * navyPct / 100 * 10) / 10;
+        const leanMass = Math.round((weight - fatMass) * 10) / 10;
+        document.getElementById('d_fat').textContent  = `Yağ kütlesi: ${fatMass} kg`;
+        document.getElementById('d_lean').textContent = `Yağsız kütle: ${leanMass} kg`;
+        document.getElementById('detailRow').style.display = '';
+    } else {
+        navyBox.className = 'result-box bmi-zayif';
+        navyVal.textContent = '—';
+        navyCat.textContent = boyun && bel ? 'Hesaplanıyor...' : 'Boyun & bel girin';
+        document.getElementById('detailRow').style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
