@@ -14,10 +14,11 @@
     #mobileFormBtn { display:none; }
     #formCloseBtn  { display:none; }
 }
-.guide-modal-overlay { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; padding:1rem; }
+.guide-modal-overlay { display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center; padding:1rem; overflow-y:auto; }
 .guide-modal-overlay.open { display:flex; }
-.guide-modal-inner { position:relative; max-width:700px; width:100%; background:#fff; border-radius:14px; overflow:hidden; }
-.guide-close-btn { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border:none; color:#fff; border-radius:50%; width:36px; height:36px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.guide-modal-inner { position:relative; max-width:min(700px, 95vw); width:100%; background:#fff; border-radius:14px; overflow:hidden; max-height:90vh; display:flex; flex-direction:column; }
+.guide-modal-inner img { width:100%; height:auto; display:block; object-fit:contain; max-height:calc(90vh - 56px); }
+.guide-close-btn { position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.6); border:none; color:#fff; border-radius:50%; width:36px; height:36px; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:1; }
 .edit-row { background:#fff8e1 !important; }
 .btn-edit { font-size:.75rem; padding:2px 7px; }
 </style>
