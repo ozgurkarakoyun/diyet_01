@@ -108,8 +108,8 @@ def seed():
             db.session.flush()
 
             dietitian = Dietitian(
-                user_id=d_user.id, name='Demo Diyetisyen',
-                phone='555-000-0000', bio='Ornek diyetisyen hesabi'
+                user_id=d_user.id, name='Vedat Hoca',
+                phone='555-000-0000', bio='Vedat Hoca diyetisyen hesabi'
             )
             db.session.add(dietitian)
             db.session.flush()
@@ -117,10 +117,16 @@ def seed():
             for c in ['DEMO001', 'DEMO002', 'DEMO003', 'HASTA001', 'HASTA002']:
                 db.session.add(RegistrationCode(code=c, dietitian_id=dietitian.id))
             db.session.commit()
-            print("Demo diyetisyen olusturuldu. (diyetisyen@demo.com / demo1234)")
+            print("Vedat Hoca diyetisyen hesabi olusturuldu. (diyetisyen@demo.com / demo1234)")
         else:
             dietitian = demo_d.dietitian
-            print("Demo diyetisyen zaten var.")
+            
+            if dietitian and dietitian.name == 'Demo Diyetisyen':
+                dietitian.name = 'Vedat Hoca'
+                db.session.commit()
+                print("Demo diyetisyen adi Vedat Hoca olarak guncellendi.")
+            else:
+                print("Vedat Hoca diyetisyen hesabi zaten var.")
 
         # Demo Patient
         demo_p = User.query.filter_by(email='hasta@demo.com').first()
@@ -199,7 +205,7 @@ def seed():
 
         print("\nSeed tamamlandi!")
         print("-" * 40)
-        print("Diyetisyen : diyetisyen@demo.com / demo1234")
+        print("Vedat Hoca : diyetisyen@demo.com / demo1234")
         print("Hasta      : hasta@demo.com / demo1234")
         print("Kayit kodlari: DEMO001-003, HASTA001-002")
 

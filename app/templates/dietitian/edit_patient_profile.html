@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Hasta Profili – DiyetTakip{% endblock %}
+{% block page_title %}Hasta Profili Düzenle{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-2">
+    <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="mb-0 fw-bold">{{ patient.nickname }}</h5>
+        <small class="text-muted">Diyetisyen tarafından hasta profil düzenleme</small>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-person-gear me-2 text-primary"></i>Hasta Profil Bilgileri</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form.nickname.label(class="form-label fw-semibold") }}
+                            {{ form.nickname(class="form-control" + (" is-invalid" if form.nickname.errors else "")) }}
+                            {% for e in form.nickname.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email.label(class="form-label fw-semibold") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                            {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.phone.label(class="form-label fw-semibold") }}
+                            {{ form.phone(class="form-control", placeholder="555 123 4567") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.birth_date.label(class="form-label fw-semibold") }}
+                            {{ form.birth_date(class="form-control") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.gender.label(class="form-label fw-semibold") }}
+                            {{ form.gender(class="form-select") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.height_cm.label(class="form-label fw-semibold") }}
+                            {{ form.height_cm(class="form-control", placeholder="170") }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.start_weight.label(class="form-label fw-semibold") }}
+                            {{ form.start_weight(class="form-control", placeholder="70") }}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.is_active(class="form-check-input") }}
+                                {{ form.is_active.label(class="form-check-label fw-semibold") }}
+                            </div>
+                            <div class="form-text">Pasif yapılırsa hastanın hesabı da pasif hale gelir.</div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Profili Kaydet
+                        </button>
+                        <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}" class="btn btn-outline-secondary">Vazgeç</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="alert alert-info small mt-3 mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            Diyetisyen iç notları hasta detay ekranındaki <strong>Kişisel Program</strong> bölümünden kaydedilir ve hasta tarafından görülmez.
+        </div>
+    </div>
+</div>
+{% endblock %}

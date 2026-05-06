@@ -36,7 +36,10 @@
     <span class="badge bg-{{ 'success' if patient.is_active else 'secondary' }}">
         {{ 'Aktif' if patient.is_active else 'Pasif' }}
     </span>
-    <div class="ms-auto">
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('dietitian.edit_patient_profile', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-person-gear me-1"></i>Profili Düzenle
+        </a>
         <form method="POST" action="{{ url_for('dietitian.toggle_patient_active', patient_id=patient.id) }}" class="d-inline">
             {{ stage_form.hidden_tag() }}
             <button class="btn btn-sm btn-outline-{{ 'danger' if patient.is_active else 'success' }}">
@@ -52,7 +55,12 @@
 
         <!-- Hasta Bilgileri -->
         <div class="card mb-3">
-            <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-person me-2"></i>Hasta Bilgileri</h6></div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="bi bi-person me-2"></i>Hasta Bilgileri</h6>
+                <a href="{{ url_for('dietitian.edit_patient_profile', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
                     <tr><td class="text-muted ps-3">E-posta</td><td>{{ patient.user.email }}</td></tr>
@@ -60,12 +68,13 @@
                     <tr><td class="text-muted ps-3">Cinsiyet</td>
                         <td>{{ 'Kadın' if patient.gender == 'female' else ('Erkek' if patient.gender == 'male' else '—') }}</td>
                     </tr>
+                    <tr><td class="text-muted ps-3">Doğum Tarihi</td><td>{{ patient.birth_date.strftime('%d.%m.%Y') if patient.birth_date else '—' }}</td></tr>
                     <tr><td class="text-muted ps-3">Boy</td><td>{{ (patient.height_cm|string + ' cm') if patient.height_cm else '—' }}</td></tr>
                     <tr><td class="text-muted ps-3">Başlangıç Kilosu</td><td>{{ (patient.start_weight|string + ' kg') if patient.start_weight else '—' }}</td></tr>
                     <tr><td class="text-muted ps-3">Kayıt Tarihi</td><td>{{ patient.created_at.strftime('%d.%m.%Y') }}</td></tr>
                     <tr><td class="text-muted ps-3">Döngü No</td><td>{{ patient.cycle_number }}. Döngü</td></tr>
                     {% if patient.notes %}
-                    <tr><td class="text-muted ps-3">Notlar</td><td class="small">{{ patient.notes }}</td></tr>
+                    <tr><td class="text-muted ps-3">Diyetisyen Notu</td><td class="small"><span class="badge bg-secondary me-1">Gizli</span>{{ patient.notes }}</td></tr>
                     {% endif %}
                 </table>
             </div>

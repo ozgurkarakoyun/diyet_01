@@ -8,7 +8,8 @@ from app import db, csrf
 from app.models import (User, Dietitian, Patient, DietStage, PatientStageHistory,
                         Measurement, Supplement, Message, RegistrationCode)
 from app.forms import (MessageForm, SupplementForm, RegistrationCodeForm,
-                       StageChangeForm, PatientProfileForm, MeasurementForm)
+                       StageChangeForm, PatientProfileForm, MeasurementForm,
+                       DietitianPatientProfileForm)
 
 dietitian_bp = Blueprint('dietitian', __name__)
 
@@ -87,6 +88,40 @@ def patient_detail(patient_id):
                            messages=messages,
                            message_form=message_form,
                            stage_form=stage_form)
+
+
+@dietitian_bp.route('/patient/<int:patient_id>/profile', methods=['GET', 'POST'])
+@login_required
+def edit_patient_profile(patient_id):
+    dietitian = get_current_dietitian()
+    patient = get_patient_or_404(patient_id, dietitian)
+    form = DietitianPatientProfileForm(obj=patient)
+
+    if request.method == 'GET':
+        form.email.data = patient.user.email
+        form.is_active.data = patient.is_active
+
+    if form.validate_on_submit():
+        new_email = form.email.data.strip().lower()
+        existing_user = User.query.filter(User.email == new_email, User.id != patient.user_id).first()
+        if existing_user:
+            flash('Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.', 'danger')
+            return render_template('dietitian/edit_patient_profile.html', patient=patient, form=form)
+
+        patient.nickname = form.nickname.data.strip()
+        patient.user.email = new_email
+        patient.phone = form.phone.data.strip() if form.phone.data else None
+        patient.birth_date = form.birth_date.data
+        patient.gender = form.gender.data or None
+        patient.height_cm = form.height_cm.data
+        patient.start_weight = form.start_weight.data
+        patient.is_active = bool(form.is_active.data)
+        patient.user.is_active = patient.is_active
+        db.session.commit()
+        flash('Hasta profili güncellendi.', 'success')
+        return redirect(url_for('dietitian.patient_detail', patient_id=patient.id))
+
+    return render_template('dietitian/edit_patient_profile.html', patient=patient, form=form)
 
 
 @dietitian_bp.route('/patient/<int:patient_id>/measurements', methods=['GET', 'POST'])

@@ -110,3 +110,17 @@ class PatientProfileForm(FlaskForm):
     height_cm = FloatField('Boy (cm)', validators=[Optional(), NumberRange(min=50, max=250)])
     start_weight = FloatField('Başlangıç Kilosu (kg)', validators=[Optional(), NumberRange(min=20, max=500)])
     submit = SubmitField('Güncelle')
+
+
+class DietitianPatientProfileForm(FlaskForm):
+    nickname = StringField('Ad / Rumuz', validators=[DataRequired(), Length(max=100)])
+    email = StringField('E-posta', validators=[DataRequired(), Email(), Length(max=120)])
+    phone = StringField('Telefon', validators=[Optional(), Length(max=20)])
+    birth_date = DateField('Doğum Tarihi', validators=[Optional()])
+    gender = SelectField('Cinsiyet', choices=[('', 'Belirtmek istemiyorum'),
+                                               ('female', 'Kadın'), ('male', 'Erkek')],
+                          validators=[Optional()])
+    height_cm = FloatField('Boy (cm)', validators=[Optional(), NumberRange(min=50, max=250)])
+    start_weight = FloatField('Başlangıç Kilosu (kg)', validators=[Optional(), NumberRange(min=20, max=500)])
+    is_active = BooleanField('Hasta aktif')
+    submit = SubmitField('Profili Güncelle')
