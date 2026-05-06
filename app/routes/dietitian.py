@@ -8,7 +8,7 @@ from app import db, csrf
 from app.models import (User, Dietitian, Patient, DietStage, PatientStageHistory,
                         Measurement, Supplement, Message, RegistrationCode)
 from app.forms import (MessageForm, SupplementForm, RegistrationCodeForm,
-                       StageChangeForm, PatientProfileForm)
+                       StageChangeForm, PatientProfileForm, MeasurementForm)
 
 dietitian_bp = Blueprint('dietitian', __name__)
 
@@ -89,14 +89,57 @@ def patient_detail(patient_id):
                            stage_form=stage_form)
 
 
-@dietitian_bp.route('/patient/<int:patient_id>/measurements')
+@dietitian_bp.route('/patient/<int:patient_id>/measurements', methods=['GET', 'POST'])
 @login_required
 def patient_measurements(patient_id):
     dietitian = get_current_dietitian()
     patient = get_patient_or_404(patient_id, dietitian)
+    form = MeasurementForm()
+
+    if form.validate_on_submit():
+        existing = Measurement.query.filter_by(patient_id=patient.id, date=form.date.data).first()
+        if existing:
+            _fill_measurement_from_form(existing, form)
+            existing.stage_id = existing.stage_id or patient.current_stage_id
+            flash('Aynı tarihte kayıt olduğu için mevcut ölçüm güncellendi.', 'success')
+        else:
+            measurement = Measurement(patient_id=patient.id, stage_id=patient.current_stage_id)
+            _fill_measurement_from_form(measurement, form)
+            db.session.add(measurement)
+            flash('Hasta için yeni ölçüm kaydedildi.', 'success')
+        db.session.commit()
+        return redirect(url_for('dietitian.patient_measurements', patient_id=patient.id))
+
+    if request.method == 'GET':
+        form.date.data = date.today()
+
     measurements = patient.measurements.order_by(Measurement.date.asc()).all()
     return render_template('dietitian/measurements.html',
                            patient=patient,
+                           form=form,
+                           edit_measurement=None,
+                           measurements=measurements)
+
+
+@dietitian_bp.route('/patient/<int:patient_id>/measurements/<int:measurement_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_patient_measurement(patient_id, measurement_id):
+    dietitian = get_current_dietitian()
+    patient = get_patient_or_404(patient_id, dietitian)
+    measurement = Measurement.query.filter_by(id=measurement_id, patient_id=patient.id).first_or_404()
+    form = MeasurementForm(obj=measurement)
+
+    if form.validate_on_submit():
+        _fill_measurement_from_form(measurement, form)
+        db.session.commit()
+        flash('Hasta ölçüm değeri güncellendi.', 'success')
+        return redirect(url_for('dietitian.patient_measurements', patient_id=patient.id))
+
+    measurements = patient.measurements.order_by(Measurement.date.asc()).all()
+    return render_template('dietitian/measurements.html',
+                           patient=patient,
+                           form=form,
+                           edit_measurement=measurement,
                            measurements=measurements)
 
 
@@ -283,6 +326,23 @@ def toggle_patient_active(patient_id):
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
+
+def _fill_measurement_from_form(measurement, form):
+    measurement.date = form.date.data
+    measurement.boyun = form.boyun.data
+    measurement.ust_gogus = form.ust_gogus.data
+    measurement.gogus = form.gogus.data
+    measurement.alt_gogus = form.alt_gogus.data
+    measurement.gobek = form.gobek.data
+    measurement.bel = form.bel.data
+    measurement.kalca = form.kalca.data
+    measurement.sag_kol = form.sag_kol.data
+    measurement.sol_kol = form.sol_kol.data
+    measurement.sag_bacak = form.sag_bacak.data
+    measurement.sol_bacak = form.sol_bacak.data
+    measurement.weight = form.weight.data
+    measurement.notes = form.notes.data
+
 
 def _get_conversation(patient_id, dietitian_id):
     sent = Message.query.filter_by(sender_dietitian_id=dietitian_id, receiver_patient_id=patient_id)

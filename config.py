@@ -5,7 +5,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    if not SECRET_KEY:
+        if os.environ.get('FLASK_ENV') == 'production':
+            raise RuntimeError('SECRET_KEY environment variable is required in production.')
+        SECRET_KEY = 'dev-secret-key-change-in-production'
     
     # Database
     DATABASE_URL = os.environ.get('DATABASE_URL', '')

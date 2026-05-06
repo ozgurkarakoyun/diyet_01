@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request
+from urllib.parse import urlparse, urljoin
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, Dietitian, Patient, RegistrationCode, DietStage, PatientStageHistory
@@ -23,7 +24,7 @@ def login():
                 return render_template('auth/login.html', form=form)
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
-            if next_page:
+            if _is_safe_url(next_page):
                 return redirect(next_page)
             return _redirect_by_role(user)
         flash('E-posta veya şifre hatalı.', 'danger')
@@ -98,7 +99,10 @@ def register_dietitian():
 
     form = DietitianRegisterForm()
     if form.validate_on_submit():
-        admin_key = os.environ.get('DIETITIAN_ADMIN_KEY', 'admin123')
+        admin_key = os.environ.get('DIETITIAN_ADMIN_KEY')
+        if not admin_key:
+            flash('Diyetisyen kaydı şu anda kapalı. Lütfen sistem yöneticisiyle iletişime geçin.', 'danger')
+            return render_template('auth/register_dietitian.html', form=form)
         if form.admin_key.data != admin_key:
             flash('Geçersiz admin anahtarı.', 'danger')
             return render_template('auth/register_dietitian.html', form=form)
@@ -121,6 +125,14 @@ def register_dietitian():
         return redirect(url_for('auth.login'))
 
     return render_template('auth/register_dietitian.html', form=form)
+
+
+def _is_safe_url(target):
+    if not target:
+        return False
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
 
 
 def _redirect_by_role(user):

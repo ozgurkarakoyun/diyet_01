@@ -23,6 +23,60 @@
     <h5 class="mb-0 fw-bold">{{ patient.nickname }} – Ölçüm Geçmişi</h5>
 </div>
 
+{% if form %}
+<div class="card mb-4" id="measurement-form">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-bold">
+            <i class="bi bi-rulers me-2"></i>
+            {% if edit_measurement %}Ölçüm Değerini Düzenle{% else %}Hasta İçin Yeni Ölçüm Gir{% endif %}
+        </h6>
+        {% if edit_measurement %}
+        <a href="{{ url_for('dietitian.patient_measurements', patient_id=patient.id) }}" class="btn btn-sm btn-outline-secondary">Yeni ölçüm moduna dön</a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{% if edit_measurement %}{{ url_for('dietitian.edit_patient_measurement', patient_id=patient.id, measurement_id=edit_measurement.id) }}{% else %}{{ url_for('dietitian.patient_measurements', patient_id=patient.id) }}{% endif %}">
+            {{ form.hidden_tag() }}
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Formda eksik veya hatalı alan var.</strong>
+                <ul class="mb-0">
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div class="row g-3">
+                <div class="col-md-3">{{ form.date.label(class="form-label") }}{{ form.date(class="form-control") }}</div>
+                <div class="col-md-3">{{ form.weight.label(class="form-label") }}{{ form.weight(class="form-control", placeholder="kg") }}</div>
+                <div class="col-md-3">{{ form.boyun.label(class="form-label") }}{{ form.boyun(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.ust_gogus.label(class="form-label") }}{{ form.ust_gogus(class="form-control", placeholder="cm") }}</div>
+
+                <div class="col-md-3">{{ form.gogus.label(class="form-label") }}{{ form.gogus(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.alt_gogus.label(class="form-label") }}{{ form.alt_gogus(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.gobek.label(class="form-label") }}{{ form.gobek(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.bel.label(class="form-label") }}{{ form.bel(class="form-control", placeholder="cm") }}</div>
+
+                <div class="col-md-3">{{ form.kalca.label(class="form-label") }}{{ form.kalca(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.sag_kol.label(class="form-label") }}{{ form.sag_kol(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.sol_kol.label(class="form-label") }}{{ form.sol_kol(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-3">{{ form.sag_bacak.label(class="form-label") }}{{ form.sag_bacak(class="form-control", placeholder="cm") }}</div>
+
+                <div class="col-md-3">{{ form.sol_bacak.label(class="form-label") }}{{ form.sol_bacak(class="form-control", placeholder="cm") }}</div>
+                <div class="col-md-9">{{ form.notes.label(class="form-label") }}{{ form.notes(class="form-control", rows=2) }}</div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check2-circle me-1"></i>{% if edit_measurement %}Ölçümü Güncelle{% else %}Yeni Ölçüm Kaydet{% endif %}
+                </button>
+                <a href="{{ url_for('dietitian.patient_detail', patient_id=patient.id) }}" class="btn btn-outline-secondary">Hasta detayına dön</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
 {# ── US Navy Yağ Oranı Hesaplama ───────────────────────────────────────────── #}
 {% set gender = patient.gender %}
 {% set height = patient.height_cm %}
@@ -144,6 +198,7 @@
                         <th>Göbek</th><th>Bel</th><th>Kalça</th><th>S.Kol</th><th>Sol Kol</th>
                         <th>S.Bacak</th><th>Sol Bacak</th><th>Kilo</th><th>Toplam</th>
                         {% if height and gender in ['male','female'] %}<th>Yağ %</th>{% endif %}
+                        <th>İşlem</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -184,6 +239,11 @@
                         {% endif %}
                     </td>
                     {% endif %}
+                    <td>
+                        <a href="{{ url_for('dietitian.edit_patient_measurement', patient_id=patient.id, measurement_id=m.id) }}#measurement-form" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Düzenle
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -353,12 +413,12 @@ new Chart(document.getElementById('navyChart'), {
 
 {% if measurements|length >= 2 %}
 // ── Mevcut Grafikler ─────────────────────────────────────────────────────────
-const labels = {{ measurements | map(attribute='date') | map('strftime', '%d.%m.%Y') | list | tojson }};
+const labels = [{% for m in measurements %}"{{ m.date.strftime('%d.%m.%Y') }}"{% if not loop.last %},{% endif %}{% endfor %}];
 const gobek  = {{ measurements | map(attribute='gobek')  | list | tojson }};
 const bel    = {{ measurements | map(attribute='bel')    | list | tojson }};
 const kalca  = {{ measurements | map(attribute='kalca')  | list | tojson }};
 const boyun  = {{ measurements | map(attribute='boyun')  | list | tojson }};
-const totals = {{ measurements | map(attribute='total_cm') | map('call') | list | tojson }};
+const totals = [{% for m in measurements %}{{ '%.1f'|format(m.total_cm()) }}{% if not loop.last %},{% endif %}{% endfor %}];
 
 const cfg = { responsive: true, maintainAspectRatio: false,
               plugins: { legend: { position: 'bottom' } } };

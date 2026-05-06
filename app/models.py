@@ -150,8 +150,6 @@ class Patient(db.Model):
         if not self.current_stage or not self.stage_start_date:
             return False
         days_in_stage = self.get_days_in_current_stage()
-        if self.current_stage.is_free_day:
-            return days_in_stage >= 1
         return days_in_stage > self.current_stage.duration_days
 
     def __repr__(self):

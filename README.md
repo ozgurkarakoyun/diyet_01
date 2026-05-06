@@ -86,7 +86,7 @@ Tarayıcıda aç: [http://localhost:5000](http://localhost:5000)
 ## 🩺 Diyetisyen Hesabı Oluşturma
 
 Yeni diyetisyen hesabı için `/auth/register/dietitian` sayfasına git.  
-`DIETITIAN_ADMIN_KEY` değeri ile kayıt olunur (varsayılan: `admin123`).
+`DIETITIAN_ADMIN_KEY` ortam değişkeni zorunludur. Railway üzerinde uzun ve rastgele bir anahtar tanımlayın; varsayılan admin anahtarı kullanılmaz.
 
 > ⚠️ Production'da `DIETITIAN_ADMIN_KEY` mutlaka değiştirilmeli!
 

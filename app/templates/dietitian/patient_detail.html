@@ -433,7 +433,12 @@
             <!-- TAB: TÜM ÖLÇÜMLER -->
             <div class="tab-pane fade" id="tab-olcumler">
                 <div class="card">
-                    <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>Tüm Ölçüm Kayıtları ({{ measurements|length }})</h6></div>
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-table me-2"></i>Tüm Ölçüm Kayıtları ({{ measurements|length }})</h6>
+                        <a href="{{ url_for('dietitian.patient_measurements', patient_id=patient.id) }}#measurement-form" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Yeni Ölçüm Gir
+                        </a>
+                    </div>
                     <div class="card-body p-0">
                         {% if measurements %}
                         <div class="table-responsive">
@@ -454,6 +459,7 @@
                                         <th>Sol Kol</th>
                                         <th>Sağ Bacak</th>
                                         <th>Sol Bacak</th>
+                                        <th>İşlem</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -482,6 +488,11 @@
                                     <td>{{ (m.sol_kol|string + ' cm') if m.sol_kol else '—' }}</td>
                                     <td>{{ (m.sag_bacak|string + ' cm') if m.sag_bacak else '—' }}</td>
                                     <td>{{ (m.sol_bacak|string + ' cm') if m.sol_bacak else '—' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('dietitian.edit_patient_measurement', patient_id=patient.id, measurement_id=m.id) }}#measurement-form" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                                 </tbody>
